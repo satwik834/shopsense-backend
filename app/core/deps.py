@@ -1,32 +1,44 @@
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status, Request, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import decode_access_token
 from app.models.enums import UserRole, ApprovalStatus
 from app.models.admin import Admin
 from app.models.vendor import Vendor
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
 
-def get_token_from_header(
+def get_token_from_cookie_or_header(
+    request: Request,
     token: Optional[str] = Depends(oauth2_scheme),
     authorization: Optional[str] = Header(None)
 ) -> str:
+    """Extract token from HTTP-Only cookie first, then Bearer header fallback."""
+    # 1. Try HTTP-Only cookie
+    cookie_token = request.cookies.get(settings.ACCESS_COOKIE_NAME)
+    if cookie_token:
+        return cookie_token
+
+    # 2. Try OAuth2 scheme token
     if token:
         return token
+
+    # 3. Try Authorization header
     if authorization and authorization.startswith("Bearer "):
         return authorization.split(" ")[1]
+
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Not authenticated. Missing Bearer token.",
+        detail="Not authenticated. Missing HTTP-Only cookie or Authorization header.",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
 def get_current_user(
-    token: str = Depends(get_token_from_header),
+    token: str = Depends(get_token_from_cookie_or_header),
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """Dependency: Extract and validate user from JWT token."""
@@ -38,19 +50,26 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # Enforce access token type
+    if payload.get("token_type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type. Expected access token.",
+        )
+
     user_id = payload.get("sub")
     role_str = payload.get("role")
 
     if not user_id or not role_str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token payload is missing user identity or role.",
+            detail="Token payload missing user identity or role.",
         )
 
     try:
         role = UserRole(role_str)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid role in token.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid role in token payload.")
 
     if role == UserRole.ADMIN:
         user = db.query(Admin).filter(Admin.id == int(user_id)).first()

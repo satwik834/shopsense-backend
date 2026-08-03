@@ -1,141 +1,145 @@
 const API_BASE = '/api/v1';
 
-function getAuthHeaders() {
-  const token = localStorage.getItem('shopsense_token');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-}
+async function request(url, options = {}) {
+  // Always include credentials so browser sends and receives HTTP-Only cookies
+  const fetchOptions = {
+    ...options,
+    credentials: 'include',
+    headers: {
+      ...options.headers,
+    },
+  };
 
-async function handleResponse(res) {
+  let res = await fetch(url, fetchOptions);
+
+  // If 401 Unauthorized, attempt token refresh via /auth/refresh cookie once
+  if (res.status === 401 && !url.includes('/auth/login') && !url.includes('/auth/refresh')) {
+    try {
+      const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (refreshRes.ok) {
+        // Retry original request with fresh cookie
+        res = await fetch(url, fetchOptions);
+      }
+    } catch (e) {
+      console.warn('Token refresh attempt failed:', e);
+    }
+  }
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: 'An error occurred' }));
     throw new Error(errorData.detail || `HTTP Error ${res.status}`);
   }
+
   return res.json();
 }
 
 export const api = {
   // Auth
   login: async (email, password) => {
-    const res = await fetch(`${API_BASE}/auth/login`, {
+    return request(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    return handleResponse(res);
   },
 
   registerVendor: async (vendorData) => {
-    const res = await fetch(`${API_BASE}/auth/register-vendor`, {
+    return request(`${API_BASE}/auth/register-vendor`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(vendorData),
     });
-    return handleResponse(res);
+  },
+
+  logout: async () => {
+    return request(`${API_BASE}/auth/logout`, {
+      method: 'POST',
+    });
   },
 
   getMe: async () => {
-    const res = await fetch(`${API_BASE}/auth/me`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(res);
+    return request(`${API_BASE}/auth/me`);
   },
 
   // Admin Controls
   getPendingVendors: async () => {
-    const res = await fetch(`${API_BASE}/admin/pending-vendors`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(res);
+    return request(`${API_BASE}/admin/pending-vendors`);
   },
 
   approveVendor: async (vendorId) => {
-    const res = await fetch(`${API_BASE}/admin/vendors/${vendorId}/approve`, {
+    return request(`${API_BASE}/admin/vendors/${vendorId}/approve`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
     });
-    return handleResponse(res);
   },
 
   rejectVendor: async (vendorId) => {
-    const res = await fetch(`${API_BASE}/admin/vendors/${vendorId}/reject`, {
+    return request(`${API_BASE}/admin/vendors/${vendorId}/reject`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
     });
-    return handleResponse(res);
   },
 
   // Analytics
   getMarketplaceSummary: async () => {
-    const res = await fetch(`${API_BASE}/analytics/marketplace`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(res);
+    return request(`${API_BASE}/analytics/marketplace`);
   },
 
   getVendorAnalytics: async (vendorId) => {
-    const res = await fetch(`${API_BASE}/analytics/vendors/${vendorId}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(res);
+    return request(`${API_BASE}/analytics/vendors/${vendorId}`);
   },
 
   // Vendors
   getVendors: async () => {
-    const res = await fetch(`${API_BASE}/vendors/`);
-    return handleResponse(res);
+    return request(`${API_BASE}/vendors/`);
   },
 
   updateVendor: async (vendorId, data) => {
-    const res = await fetch(`${API_BASE}/vendors/${vendorId}`, {
+    return request(`${API_BASE}/vendors/${vendorId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    return handleResponse(res);
   },
 
   deactivateVendor: async (vendorId) => {
-    const res = await fetch(`${API_BASE}/vendors/${vendorId}`, {
+    return request(`${API_BASE}/vendors/${vendorId}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
     });
-    return handleResponse(res);
   },
 
   // Products
   getProducts: async (vendorId = null) => {
     const url = vendorId ? `${API_BASE}/products/?vendor_id=${vendorId}` : `${API_BASE}/products/`;
-    const res = await fetch(url, { headers: getAuthHeaders() });
-    return handleResponse(res);
+    return request(url);
   },
 
   createProduct: async (productData) => {
-    const res = await fetch(`${API_BASE}/products/`, {
+    return request(`${API_BASE}/products/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(productData),
     });
-    return handleResponse(res);
   },
 
   // Customers & Transactions
   getCustomers: async () => {
-    const res = await fetch(`${API_BASE}/customers/`);
-    return handleResponse(res);
+    return request(`${API_BASE}/customers/`);
   },
 
   getTransactions: async (vendorId = null) => {
     const url = vendorId ? `${API_BASE}/transactions/?vendor_id=${vendorId}` : `${API_BASE}/transactions/`;
-    const res = await fetch(url, { headers: getAuthHeaders() });
-    return handleResponse(res);
+    return request(url);
   },
 
   recordTransaction: async (txData) => {
-    const res = await fetch(`${API_BASE}/transactions/`, {
+    return request(`${API_BASE}/transactions/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(txData),
     });
-    return handleResponse(res);
   }
 };
+
+export default api;

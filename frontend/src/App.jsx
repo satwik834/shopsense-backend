@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from './api';
 import Login from './pages/Login';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -14,16 +15,58 @@ export default function App() {
   });
 
   const [activeTab, setActiveTab] = useState('vendors');
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Validate session via HTTP-Only cookie on mount
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const userProfile = await api.getMe();
+        if (userProfile) {
+          const userData = {
+            user_id: userProfile.id,
+            user_name: userProfile.name,
+            email: userProfile.email,
+            role: userProfile.role,
+            approval_status: userProfile.approval_status
+          };
+          setCurrentUser(userData);
+          localStorage.setItem('shopsense_user', JSON.stringify(userData));
+        }
+      } catch (err) {
+        // Not logged in or session expired
+        setCurrentUser(null);
+        localStorage.removeItem('shopsense_user');
+      } finally {
+        setCheckingAuth(false);
+      }
+    }
+    checkSession();
+  }, []);
 
   const handleLoginSuccess = (userData) => {
     setCurrentUser(userData);
+    localStorage.setItem('shopsense_user', JSON.stringify(userData));
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('shopsense_token');
-    localStorage.removeItem('shopsense_user');
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    try {
+      await api.logout();
+    } catch (e) {
+      console.warn('Logout error:', e);
+    } finally {
+      localStorage.removeItem('shopsense_user');
+      setCurrentUser(null);
+    }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-[#0c0d12] flex items-center justify-center font-mono text-xs text-zinc-500">
+        Checking HTTP-Only cookie authentication...
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
@@ -31,7 +74,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0c0d12] text-zinc-100 flex flex-col font-sans antialiased">
-      {/* Top Header with User Info & Logout */}
+      {/* Top Header */}
       <Header user={currentUser} onLogout={handleLogout} />
 
       <div className="flex flex-1 overflow-hidden">

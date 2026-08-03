@@ -9,7 +9,16 @@ class Settings(BaseSettings):
     # JWT Authentication Settings
     SECRET_KEY: str = "shopsense_secret_jwt_key_for_vendor_approval_2026"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day expiration
+    
+    # Token Durations
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # Short-lived access token (15 mins)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7    # Long-lived refresh token (7 days)
+
+    # HTTP-Only Cookie Configuration
+    ACCESS_COOKIE_NAME: str = "access_token"
+    REFRESH_COOKIE_NAME: str = "refresh_token"
+    COOKIE_SECURE: bool = False  # False for local HTTP development
+    COOKIE_SAMESITE: str = "lax"
 
     class Config:
         case_sensitive = True
