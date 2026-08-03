@@ -38,6 +38,10 @@ env/
 *.db
 *.sqlite3
 
+# Presentations / Slide Decks
+*.pptx
+*.ppt
+
 # IDE / Editor files
 .vscode/
 .idea/
@@ -47,5 +51,3 @@ env/
 # OS files
 .DS_Store
 Thumbs.db
-
-.docx
