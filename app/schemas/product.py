@@ -12,7 +12,7 @@ class ProductBase(BaseModel):
     image_url: Optional[str] = None
 
 class ProductCreate(ProductBase):
-    vendor_id: int
+    vendor_id: Optional[int] = None
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None

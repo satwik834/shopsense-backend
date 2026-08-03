@@ -1,7 +1,6 @@
 const API_BASE = '/api/v1';
 
 async function request(url, options = {}) {
-  // Always include credentials so browser sends and receives HTTP-Only cookies
   const fetchOptions = {
     ...options,
     credentials: 'include',
@@ -12,7 +11,6 @@ async function request(url, options = {}) {
 
   let res = await fetch(url, fetchOptions);
 
-  // If 401 Unauthorized, attempt token refresh via /auth/refresh cookie once
   if (res.status === 401 && !url.includes('/auth/login') && !url.includes('/auth/refresh')) {
     try {
       const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
@@ -20,7 +18,6 @@ async function request(url, options = {}) {
         credentials: 'include',
       });
       if (refreshRes.ok) {
-        // Retry original request with fresh cookie
         res = await fetch(url, fetchOptions);
       }
     } catch (e) {
@@ -120,6 +117,20 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(productData),
+    });
+  },
+
+  updateProduct: async (productId, data) => {
+    return request(`${API_BASE}/products/${productId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteProduct: async (productId) => {
+    return request(`${API_BASE}/products/${productId}`, {
+      method: 'DELETE',
     });
   },
 

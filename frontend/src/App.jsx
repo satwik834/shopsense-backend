@@ -63,7 +63,7 @@ export default function App() {
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-[#0c0d12] flex items-center justify-center font-mono text-xs text-zinc-500">
-        Checking HTTP-Only cookie authentication...
+        Checking session...
       </div>
     );
   }
@@ -85,7 +85,7 @@ export default function App() {
         <main className="flex-1 p-8 max-w-7xl mx-auto overflow-y-auto w-full">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'vendors' && <VendorsControl currentUser={currentUser} />}
-          {activeTab === 'products' && <ProductsCatalog />}
+          {activeTab === 'products' && <ProductsCatalog currentUser={currentUser} />}
           {activeTab === 'analytics' && <AnalyticsEngine />}
         </main>
       </div>
