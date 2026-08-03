@@ -4,8 +4,7 @@ ShopSense is a multi-vendor e-commerce analytics platform designed to provide ac
 
 ## Base Stack
 - **Backend Framework:** FastAPI (Python)
-- **Database:** SQLite (Prototyping) with SQLAlchemy ORM
-- **Data Processing:** Pandas
+- **Database:** SQLite  with SQLAlchemy ORM
 
 ## Project Structure
 ```text
