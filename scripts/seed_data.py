@@ -5,6 +5,9 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.database import SessionLocal, engine, Base
+from app.core.security import hash_password
+from app.models.enums import UserRole, ApprovalStatus
+from app.models.admin import Admin
 from app.models.vendor import Vendor
 from app.models.customer import Customer
 from app.models.product import Product
@@ -17,10 +20,55 @@ def seed_data():
 
     db = SessionLocal()
 
-    print("Seeding sample vendors...")
-    v1 = Vendor(name="Apex Electronics", store_name="Apex Tech Store", email="contact@apex.com", phone="123-456-7890", description="Consumer electronics vendor")
-    v2 = Vendor(name="Urban Fashion", store_name="Urban Style", email="sales@urbanfashion.com", phone="987-654-3210", description="Trendy clothing and accessories")
-    db.add_all([v1, v2])
+    print("Seeding default Admin user...")
+    admin_user = Admin(
+        name="System Administrator",
+        email="admin@shopsense.com",
+        hashed_password=hash_password("adminpassword123"),
+        role=UserRole.ADMIN,
+        is_active=True
+    )
+    db.add(admin_user)
+    db.commit()
+
+    print("Seeding approved vendors...")
+    v1 = Vendor(
+        name="Apex Electronics",
+        store_name="Apex Tech Store",
+        email="contact@apex.com",
+        hashed_password=hash_password("vendorpass123"),
+        phone="123-456-7890",
+        description="Consumer electronics vendor",
+        role=UserRole.VENDOR,
+        approval_status=ApprovalStatus.APPROVED,
+        is_active=True
+    )
+    v2 = Vendor(
+        name="Urban Fashion",
+        store_name="Urban Style",
+        email="sales@urbanfashion.com",
+        hashed_password=hash_password("vendorpass123"),
+        phone="987-654-3210",
+        description="Trendy clothing and accessories",
+        role=UserRole.VENDOR,
+        approval_status=ApprovalStatus.APPROVED,
+        is_active=True
+    )
+
+    print("Seeding a PENDING vendor application...")
+    v3 = Vendor(
+        name="Fresh Foods Inc.",
+        store_name="Fresh Organics",
+        email="apply@freshfoods.com",
+        hashed_password=hash_password("vendorpass123"),
+        phone="555-9988",
+        description="Organic groceries vendor application",
+        role=UserRole.VENDOR,
+        approval_status=ApprovalStatus.PENDING,
+        is_active=True
+    )
+
+    db.add_all([v1, v2, v3])
     db.commit()
 
     print("Seeding sample customers...")
@@ -43,7 +91,11 @@ def seed_data():
     db.add_all([t1, t2, t3])
     db.commit()
 
-    print("Data seeding completed successfully!")
+    print("\nData seeding completed successfully!")
+    print("Default Admin Account: admin@shopsense.com / adminpassword123")
+    print("Approved Vendor Account: contact@apex.com / vendorpass123")
+    print("Pending Vendor Account: apply@freshfoods.com / vendorpass123")
+
     db.close()
 
 if __name__ == "__main__":
