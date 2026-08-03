@@ -4,17 +4,34 @@ from sqlalchemy import func
 from typing import List
 
 from app.core.database import get_db
+from app.core.deps import get_current_user, get_current_admin
+from app.models.enums import UserRole
 from app.models.vendor import Vendor
 from app.models.product import Product
 from app.models.customer import Customer
 from app.models.transaction import Transaction
+from app.models.admin import Admin
 from app.schemas.analytics import VendorAnalyticsResponse, VendorProductSummary, MarketplaceSummaryResponse
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @router.get("/vendors/{vendor_id}", response_model=VendorAnalyticsResponse)
-def get_vendor_analytics(vendor_id: int, db: Session = Depends(get_db)):
+def get_vendor_analytics(
+    vendor_id: int,
+    db: Session = Depends(get_db),
+    current: dict = Depends(get_current_user)
+):
     """Calculate sales, revenue, and product analytics for a given vendor."""
+    user = current["user"]
+    role: UserRole = current["role"]
+
+    # Enforce RBAC: Vendor can ONLY view their own sales analytics
+    if role == UserRole.VENDOR and user.id != vendor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. You can only view your own sales analytics."
+        )
+
     vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
     if not vendor:
         raise HTTPException(
@@ -85,8 +102,11 @@ def get_vendor_analytics(vendor_id: int, db: Session = Depends(get_db)):
     )
 
 @router.get("/marketplace", response_model=MarketplaceSummaryResponse)
-def get_marketplace_summary(db: Session = Depends(get_db)):
-    """Get high-level summary metrics across the entire ShopSense marketplace."""
+def get_marketplace_summary(
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
+):
+    """Get high-level summary metrics across the entire ShopSense marketplace (Admin only)."""
     total_vendors = db.query(Vendor).count()
     total_customers = db.query(Customer).count()
     total_products = db.query(Product).count()

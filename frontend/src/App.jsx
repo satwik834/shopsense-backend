@@ -14,8 +14,22 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [activeTab, setActiveTab] = useState('vendors');
+  const isAdmin = currentUser?.role === 'admin';
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return currentUser?.role === 'admin' ? 'vendors' : 'products';
+  });
+
   const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Enforce tab safety when user role changes
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.role === 'vendor' && (activeTab === 'dashboard' || activeTab === 'vendors')) {
+        setActiveTab('products');
+      }
+    }
+  }, [currentUser, activeTab]);
 
   // Validate session via HTTP-Only cookie on mount
   useEffect(() => {
@@ -32,9 +46,13 @@ export default function App() {
           };
           setCurrentUser(userData);
           localStorage.setItem('shopsense_user', JSON.stringify(userData));
+
+          // Set appropriate default tab
+          if (userData.role === 'vendor') {
+            setActiveTab('products');
+          }
         }
       } catch (err) {
-        // Not logged in or session expired
         setCurrentUser(null);
         localStorage.removeItem('shopsense_user');
       } finally {
@@ -47,6 +65,7 @@ export default function App() {
   const handleLoginSuccess = (userData) => {
     setCurrentUser(userData);
     localStorage.setItem('shopsense_user', JSON.stringify(userData));
+    setActiveTab(userData.role === 'admin' ? 'vendors' : 'products');
   };
 
   const handleLogout = async () => {
@@ -78,15 +97,15 @@ export default function App() {
       <Header user={currentUser} onLogout={handleLogout} />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* Sidebar Navigation */}
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} />
 
         {/* Main Content Area */}
         <main className="flex-1 p-8 max-w-7xl mx-auto overflow-y-auto w-full">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'vendors' && <VendorsControl currentUser={currentUser} />}
+          {isAdmin && activeTab === 'dashboard' && <Dashboard />}
+          {isAdmin && activeTab === 'vendors' && <VendorsControl currentUser={currentUser} />}
           {activeTab === 'products' && <ProductsCatalog currentUser={currentUser} />}
-          {activeTab === 'analytics' && <AnalyticsEngine />}
+          {activeTab === 'analytics' && <AnalyticsEngine currentUser={currentUser} />}
         </main>
       </div>
     </div>

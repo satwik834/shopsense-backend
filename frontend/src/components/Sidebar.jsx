@@ -1,16 +1,25 @@
 import React from 'react';
 import { LayoutDashboard, Users, Package, BarChart3 } from 'lucide-react';
 
-export default function Sidebar({ activeTab, setActiveTab }) {
-  const navItems = [
+export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
+  const isAdmin = currentUser?.role === 'admin';
+
+  const adminNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'vendors', label: 'Vendors Control', icon: Users },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'analytics', label: 'Analytics Engine', icon: BarChart3 },
   ];
 
+  const vendorNavItems = [
+    { id: 'products', label: 'My Products', icon: Package },
+    { id: 'analytics', label: 'My Sales & Analytics', icon: BarChart3 },
+  ];
+
+  const navItems = isAdmin ? adminNavItems : vendorNavItems;
+
   return (
-    <aside className="w-64 border-r border-zinc-800/80 bg-[#090a0f] min-h-screen flex flex-col justify-between p-4 selection:bg-indigo-500/20">
+    <aside className="w-64 border-r border-zinc-800/80 bg-[#090a0f] min-h-screen flex flex-col justify-between p-4 selection:bg-indigo-500/20 flex-shrink-0">
       <div>
         {/* Brand Header */}
         <div className="flex items-center gap-3 px-3 py-4 mb-6">
@@ -18,8 +27,12 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             S
           </div>
           <div>
-            <h1 className="font-bold text-base text-zinc-100 tracking-tight">ShopSense OS</h1>
-            <p className="text-[11px] text-zinc-500 font-medium">Enterprise Analytics v0.1</p>
+            <h1 className="font-bold text-base text-zinc-100 tracking-tight">
+              {isAdmin ? 'ShopSense OS' : 'ShopSense Seller'}
+            </h1>
+            <p className="text-[11px] text-zinc-500 font-medium">
+              {isAdmin ? 'Enterprise Control v0.1' : 'Vendor Merchant Portal'}
+            </p>
           </div>
         </div>
 
@@ -46,13 +59,15 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         </nav>
       </div>
 
-      {/* Footer info */}
+      {/* Footer Info */}
       <div className="p-3 bg-zinc-900/40 border border-zinc-800/60 rounded-xl">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs text-zinc-300 font-medium">Backend Live</span>
+          <span className="text-xs text-zinc-300 font-medium">Session Active</span>
         </div>
-        <p className="text-[11px] text-zinc-500 mt-1">SQLite • SQLAlchemy ORM</p>
+        <p className="text-[11px] text-zinc-500 mt-1">
+          Role: <span className="font-mono text-zinc-300 uppercase">{currentUser?.role}</span>
+        </p>
       </div>
     </aside>
   );

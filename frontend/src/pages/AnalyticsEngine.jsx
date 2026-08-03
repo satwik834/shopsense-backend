@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import MetricCard from '../components/MetricCard';
-import { BarChart3, TrendingUp, ShoppingBag, DollarSign, PackageCheck } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
-export default function AnalyticsEngine() {
+export default function AnalyticsEngine({ currentUser }) {
+  const isAdmin = currentUser?.role === 'admin';
+  const vendorSelfId = currentUser?.user_id?.toString();
+
   const [vendors, setVendors] = useState([]);
-  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const [selectedVendorId, setSelectedVendorId] = useState(isAdmin ? '' : vendorSelfId);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadVendors();
-  }, []);
+    if (isAdmin) {
+      loadVendors();
+    } else if (vendorSelfId) {
+      setSelectedVendorId(vendorSelfId);
+      loadVendorAnalytics(vendorSelfId);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (selectedVendorId) {
@@ -24,7 +32,7 @@ export default function AnalyticsEngine() {
       setLoading(true);
       const data = await api.getVendors();
       setVendors(data);
-      if (data.length > 0) {
+      if (data.length > 0 && !selectedVendorId) {
         setSelectedVendorId(data[0].id.toString());
       }
     } catch (err) {
@@ -51,31 +59,35 @@ export default function AnalyticsEngine() {
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Analytics Engine</h1>
+          <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">
+            {isAdmin ? 'Analytics Engine' : 'My Sales & Performance'}
+          </h1>
           <p className="text-xs font-mono text-indigo-400 mt-1 uppercase tracking-wider">
-            BUSINESS INTELLIGENCE & REVENUE DECISIONS
+            {isAdmin ? 'BUSINESS INTELLIGENCE & VENDOR DECISIONS' : 'STORE SALES & REVENUE PERFORMANCE'}
           </p>
         </div>
 
-        {/* Vendor Selector Dropdown */}
-        <div className="flex items-center gap-3">
-          <label className="text-xs font-bold uppercase text-zinc-400 font-mono">SELECT VENDOR:</label>
-          <select
-            value={selectedVendorId}
-            onChange={(e) => setSelectedVendorId(e.target.value)}
-            className="bg-[#12141d] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2 text-xs text-zinc-100 focus:outline-none font-medium"
-          >
-            {vendors.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name} ({v.store_name || `ID ${v.id}`})
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Vendor Selector Dropdown (Admin Only) */}
+        {isAdmin && (
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-bold uppercase text-zinc-400 font-mono">SELECT VENDOR:</label>
+            <select
+              value={selectedVendorId}
+              onChange={(e) => setSelectedVendorId(e.target.value)}
+              className="bg-[#12141d] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2 text-xs text-zinc-100 focus:outline-none font-medium"
+            >
+              {vendors.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name} ({v.store_name || `ID ${v.id}`})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {loading || !analytics ? (
-        <div className="py-12 text-center text-xs font-mono text-zinc-500">Loading vendor analytics metrics...</div>
+        <div className="py-12 text-center text-xs font-mono text-zinc-500">Loading sales analytics...</div>
       ) : (
         <>
           {/* Vendor Metrics Overview Row */}
@@ -114,7 +126,7 @@ export default function AnalyticsEngine() {
             </div>
 
             {analytics.top_selling_products.length === 0 ? (
-              <div className="py-8 text-center text-xs text-zinc-500">No product sales recorded for this vendor yet.</div>
+              <div className="py-8 text-center text-xs text-zinc-500">No product sales recorded yet.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-zinc-300">
