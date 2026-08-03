@@ -101,7 +101,7 @@ export default function VendorsControl({ currentUser }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <MetricCard
           title="TOTAL REVENUE (GMV)"
-          value={`$${totalRevenueGMV.toFixed(2)}`}
+          value={`₹${totalRevenueGMV.toFixed(2)}`}
           subtitle="Aggregate marketplace volume"
           highlightColor="text-emerald-400"
         />

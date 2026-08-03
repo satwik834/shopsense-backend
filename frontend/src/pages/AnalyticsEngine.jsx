@@ -94,7 +94,7 @@ export default function AnalyticsEngine({ currentUser }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
             <MetricCard
               title="TOTAL REVENUE"
-              value={`$${analytics.total_revenue.toFixed(2)}`}
+              value={`₹${analytics.total_revenue.toFixed(2)}`}
               subtitle="Completed transaction earnings"
               highlightColor="text-emerald-400"
             />
@@ -112,7 +112,7 @@ export default function AnalyticsEngine({ currentUser }) {
             />
             <MetricCard
               title="AVG ORDER VALUE"
-              value={`$${analytics.average_order_value.toFixed(2)}`}
+              value={`₹${analytics.average_order_value.toFixed(2)}`}
               subtitle="Revenue per transaction"
               highlightColor="text-sky-400"
             />
@@ -133,7 +133,7 @@ export default function AnalyticsEngine({ currentUser }) {
                   <thead className="bg-[#090a0f] border-b border-zinc-800 text-[11px] font-mono uppercase text-zinc-400">
                     <tr>
                       <th className="px-4 py-3">PRODUCT NAME</th>
-                      <th className="px-4 py-3">PRICE</th>
+                      <th className="px-4 py-3">PRICE (₹)</th>
                       <th className="px-4 py-3">CURRENT STOCK</th>
                       <th className="px-4 py-3">UNITS SOLD</th>
                       <th className="px-4 py-3 text-right">REVENUE GENERATED</th>
@@ -143,11 +143,11 @@ export default function AnalyticsEngine({ currentUser }) {
                     {analytics.top_selling_products.map((p) => (
                       <tr key={p.id} className="hover:bg-zinc-800/30 transition-colors">
                         <td className="px-4 py-3.5 font-semibold text-zinc-100">{p.name}</td>
-                        <td className="px-4 py-3.5 font-mono text-zinc-300">${p.price.toFixed(2)}</td>
+                        <td className="px-4 py-3.5 font-mono text-zinc-300">₹{p.price.toFixed(2)}</td>
                         <td className="px-4 py-3.5 font-mono text-zinc-400">{p.stock_quantity} units</td>
                         <td className="px-4 py-3.5 font-mono text-indigo-400 font-bold">{p.units_sold}</td>
                         <td className="px-4 py-3.5 text-right font-mono font-bold text-emerald-400 text-sm">
-                          ${p.revenue_generated.toFixed(2)}
+                          ₹{p.revenue_generated.toFixed(2)}
                         </td>
                       </tr>
                     ))}

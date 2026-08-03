@@ -184,12 +184,12 @@ export default function ProductsCatalog({ currentUser }) {
 
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                PRICE ($) *
+                PRICE (₹) *
               </label>
               <input
                 type="number"
                 step="0.01"
-                placeholder="99.99"
+                placeholder="1499.00"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
@@ -307,7 +307,7 @@ export default function ProductsCatalog({ currentUser }) {
                   <th className="px-4 py-3">PRODUCT</th>
                   <th className="px-4 py-3">DESCRIPTION</th>
                   <th className="px-4 py-3">CATEGORY</th>
-                  <th className="px-4 py-3">PRICE</th>
+                  <th className="px-4 py-3">PRICE (₹)</th>
                   <th className="px-4 py-3">STOCK QUANTITY</th>
                   <th className="px-4 py-3 text-right">ACTIONS</th>
                 </tr>
@@ -328,7 +328,7 @@ export default function ProductsCatalog({ currentUser }) {
                       </span>
                     </td>
                     <td className="px-4 py-4 font-mono font-bold text-zinc-100 text-sm">
-                      ${p.price?.toFixed(2)}
+                      ₹{p.price?.toFixed(2)}
                     </td>
                     <td className="px-4 py-4 font-mono">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
@@ -388,7 +388,7 @@ export default function ProductsCatalog({ currentUser }) {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold uppercase text-zinc-400 mb-1">PRICE ($)</label>
+                <label className="block text-[11px] font-bold uppercase text-zinc-400 mb-1">PRICE (₹)</label>
                 <input
                   type="number"
                   step="0.01"

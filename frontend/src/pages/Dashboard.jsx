@@ -101,7 +101,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <MetricCard
           title="MARKETPLACE REVENUE"
-          value={`$${(summary?.total_marketplace_revenue || 0).toFixed(2)}`}
+          value={`₹${(summary?.total_marketplace_revenue || 0).toFixed(2)}`}
           subtitle="Total platform gross revenue"
           highlightColor="text-emerald-400"
         />
@@ -188,7 +188,7 @@ export default function Dashboard() {
                   <option value="">No products for this vendor</option>
                 ) : (
                   availableProducts.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name} (${p.price?.toFixed(2)})</option>
+                    <option key={p.id} value={p.id}>{p.name} (₹{p.price?.toFixed(2)})</option>
                   ))
                 )}
               </select>
@@ -242,8 +242,8 @@ export default function Dashboard() {
                     <tr key={tx.id} className="hover:bg-zinc-800/30 transition-colors">
                       <td className="px-4 py-3 font-mono text-zinc-400">#TX-{tx.id.toString().padStart(4, '0')}</td>
                       <td className="px-4 py-3 font-mono text-zinc-300">{tx.quantity}</td>
-                      <td className="px-4 py-3 font-mono text-zinc-300">${tx.unit_price?.toFixed(2)}</td>
-                      <td className="px-4 py-3 font-mono font-bold text-emerald-400">${tx.total_amount?.toFixed(2)}</td>
+                      <td className="px-4 py-3 font-mono text-zinc-300">₹{tx.unit_price?.toFixed(2)}</td>
+                      <td className="px-4 py-3 font-mono font-bold text-emerald-400">₹{tx.total_amount?.toFixed(2)}</td>
                       <td className="px-4 py-3">
                         <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                           {tx.status}
