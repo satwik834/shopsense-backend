@@ -1,4 +1,4 @@
-# ShopSense Backend
+# ShopSense 
 
 ShopSense is a multi-vendor e-commerce analytics platform designed to provide actionable business intelligence, vendor performance tracking, and customer insights.
 
