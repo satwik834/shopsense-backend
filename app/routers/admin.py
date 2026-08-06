@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
 
 from app.core.database import get_db
 from app.core.deps import get_current_admin
-from app.models.enums import ApprovalStatus
-from app.models.vendor import Vendor
 from app.models.admin import Admin
 from app.schemas.vendor import VendorResponse
+from app.services.admin_service import AdminService
 
 router = APIRouter(prefix="/admin", tags=["Admin Controls"])
 
@@ -16,9 +15,8 @@ def get_pending_vendors(
     db: Session = Depends(get_db),
     admin: Admin = Depends(get_current_admin)
 ):
-    """List all vendors waiting for admin approval (Admin only)."""
-    pending = db.query(Vendor).filter(Vendor.approval_status == ApprovalStatus.PENDING).all()
-    return pending
+    """Retrieve all pending vendor applications (Admin only)."""
+    return AdminService.get_pending_vendors(db)
 
 @router.put("/vendors/{vendor_id}/approve", response_model=VendorResponse)
 def approve_vendor(
@@ -27,17 +25,7 @@ def approve_vendor(
     admin: Admin = Depends(get_current_admin)
 ):
     """Approve a pending vendor application (Admin only)."""
-    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
-    if not vendor:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Vendor with ID {vendor_id} not found."
-        )
-    vendor.approval_status = ApprovalStatus.APPROVED
-    vendor.is_active = True
-    db.commit()
-    db.refresh(vendor)
-    return vendor
+    return AdminService.approve_vendor(db, vendor_id)
 
 @router.put("/vendors/{vendor_id}/reject", response_model=VendorResponse)
 def reject_vendor(
@@ -45,14 +33,5 @@ def reject_vendor(
     db: Session = Depends(get_db),
     admin: Admin = Depends(get_current_admin)
 ):
-    """Reject a pending vendor application (Admin only)."""
-    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
-    if not vendor:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Vendor with ID {vendor_id} not found."
-        )
-    vendor.approval_status = ApprovalStatus.REJECTED
-    db.commit()
-    db.refresh(vendor)
-    return vendor
+    """Reject a vendor application (Admin only)."""
+    return AdminService.reject_vendor(db, vendor_id)
