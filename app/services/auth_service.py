@@ -30,7 +30,7 @@ class AuthService:
             email=vendor_in.email,
             hashed_password=hash_password(vendor_in.password),
             phone=vendor_in.phone,
-            address=vendor_in.description,
+            description=vendor_in.description,
             role=UserRole.VENDOR,
             approval_status=ApprovalStatus.PENDING
         )
