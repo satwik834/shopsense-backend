@@ -1,5 +1,13 @@
 import React from 'react';
-import { LayoutDashboard, Users, Package, BarChart3 } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Users, 
+  Package, 
+  BarChart3, 
+  Boxes, 
+  UserCheck, 
+  Sparkles 
+} from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
   const isAdmin = currentUser?.role === 'admin';
@@ -7,12 +15,17 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
   const adminNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'vendors', label: 'Vendors Control', icon: Users },
-    { id: 'products', label: 'Products', icon: Package },
+    { id: 'products', label: 'Products Catalog', icon: Package },
+    { id: 'inventory', label: 'Inventory Intelligence', icon: Boxes },
+    { id: 'customer_insights', label: 'Customer Insights', icon: UserCheck },
+    { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
     { id: 'analytics', label: 'Analytics Engine', icon: BarChart3 },
   ];
 
   const vendorNavItems = [
     { id: 'products', label: 'My Products', icon: Package },
+    { id: 'inventory', label: 'Inventory & Alerts', icon: Boxes },
+    { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
     { id: 'analytics', label: 'My Sales & Analytics', icon: BarChart3 },
   ];
 
@@ -31,7 +44,7 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
               {isAdmin ? 'ShopSense OS' : 'ShopSense Seller'}
             </h1>
             <p className="text-[11px] text-zinc-500 font-medium">
-              {isAdmin ? 'Enterprise Control v0.1' : 'Vendor Merchant Portal'}
+              {isAdmin ? 'Enterprise Control v0.2' : 'Vendor Merchant Portal'}
             </p>
           </div>
         </div>

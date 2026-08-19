@@ -1,6 +1,17 @@
 from fastapi import FastAPI
 from app.core.config import settings
-from app.routers import auth, admin, vendors, customers, products, transactions, analytics
+from app.routers import (
+    auth,
+    admin,
+    vendors,
+    customers,
+    products,
+    transactions,
+    analytics,
+    inventory,
+    customer_analytics,
+    recommendations
+)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -16,6 +27,9 @@ app.include_router(customers.router, prefix=settings.API_V1_STR)
 app.include_router(products.router, prefix=settings.API_V1_STR)
 app.include_router(transactions.router, prefix=settings.API_V1_STR)
 app.include_router(analytics.router, prefix=settings.API_V1_STR)
+app.include_router(inventory.router, prefix=settings.API_V1_STR)
+app.include_router(customer_analytics.router, prefix=settings.API_V1_STR)
+app.include_router(recommendations.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

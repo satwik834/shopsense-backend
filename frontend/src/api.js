@@ -150,6 +150,55 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(txData),
     });
+  },
+
+  // Milestone 2: Inventory Intelligence
+  getInventoryLevels: async (threshold = 10) => {
+    return request(`${API_BASE}/inventory/stock-levels?threshold=${threshold}`);
+  },
+
+  getLowStockAlerts: async (threshold = 10) => {
+    return request(`${API_BASE}/inventory/low-stock-alerts?threshold=${threshold}`);
+  },
+
+  restockProduct: async (productId, additionalQuantity) => {
+    return request(`${API_BASE}/inventory/${productId}/restock`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ additional_quantity: additionalQuantity }),
+    });
+  },
+
+  getInventoryForecast: async (productId, days = 30) => {
+    return request(`${API_BASE}/inventory/${productId}/forecast?days=${days}`);
+  },
+
+  // Milestone 2: Customer Analytics & Segmentation
+  getCustomerSegments: async () => {
+    return request(`${API_BASE}/customer-analytics/segments`);
+  },
+
+  getSegmentedCustomers: async (segment = null) => {
+    const url = segment ? `${API_BASE}/customer-analytics/customers?segment=${segment}` : `${API_BASE}/customer-analytics/customers`;
+    return request(url);
+  },
+
+  getCustomerProfile: async (customerId) => {
+    return request(`${API_BASE}/customer-analytics/customers/${customerId}`);
+  },
+
+  // Milestone 2: Product Recommendations
+  getTopSellingRecommendations: async (category = null) => {
+    const url = category ? `${API_BASE}/recommendations/top-selling?category=${encodeURIComponent(category)}` : `${API_BASE}/recommendations/top-selling`;
+    return request(url);
+  },
+
+  getFrequentlyBoughtTogether: async (productId) => {
+    return request(`${API_BASE}/recommendations/frequently-bought-together/${productId}`);
+  },
+
+  getCustomerRecommendations: async (customerId) => {
+    return request(`${API_BASE}/recommendations/customer/${customerId}`);
   }
 };
 

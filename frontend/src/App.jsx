@@ -7,6 +7,9 @@ import Dashboard from './pages/Dashboard';
 import VendorsControl from './pages/VendorsControl';
 import ProductsCatalog from './pages/ProductsCatalog';
 import AnalyticsEngine from './pages/AnalyticsEngine';
+import InventoryControl from './pages/InventoryControl';
+import CustomerInsights from './pages/CustomerInsights';
+import Recommendations from './pages/Recommendations';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -25,7 +28,7 @@ export default function App() {
   // Enforce tab safety when user role changes
   useEffect(() => {
     if (currentUser) {
-      if (currentUser.role === 'vendor' && (activeTab === 'dashboard' || activeTab === 'vendors')) {
+      if (currentUser.role === 'vendor' && (activeTab === 'dashboard' || activeTab === 'vendors' || activeTab === 'customer_insights')) {
         setActiveTab('products');
       }
     }
@@ -48,7 +51,7 @@ export default function App() {
           localStorage.setItem('shopsense_user', JSON.stringify(userData));
 
           // Set appropriate default tab
-          if (userData.role === 'vendor') {
+          if (userData.role === 'vendor' && (activeTab === 'dashboard' || activeTab === 'vendors' || activeTab === 'customer_insights')) {
             setActiveTab('products');
           }
         }
@@ -105,6 +108,9 @@ export default function App() {
           {isAdmin && activeTab === 'dashboard' && <Dashboard />}
           {isAdmin && activeTab === 'vendors' && <VendorsControl currentUser={currentUser} />}
           {activeTab === 'products' && <ProductsCatalog currentUser={currentUser} />}
+          {activeTab === 'inventory' && <InventoryControl currentUser={currentUser} />}
+          {isAdmin && activeTab === 'customer_insights' && <CustomerInsights />}
+          {activeTab === 'recommendations' && <Recommendations currentUser={currentUser} />}
           {activeTab === 'analytics' && <AnalyticsEngine currentUser={currentUser} />}
         </main>
       </div>
