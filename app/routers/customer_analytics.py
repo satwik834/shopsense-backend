@@ -9,6 +9,7 @@ from app.schemas.customer_analytics import (
     CustomerSpendProfile,
     CustomerSegmentationSummaryResponse
 )
+from app.models.enums import UserRole
 from app.services.customer_analytics_service import CustomerAnalyticsService
 
 router = APIRouter(prefix="/customer-analytics", tags=["Customer Analytics & Segmentation"])
@@ -19,7 +20,8 @@ def get_customer_segments(
     current: dict = Depends(get_current_user)
 ):
     """Retrieve SQL-based customer segmentation overview, revenue distribution, and VIP profiles."""
-    return CustomerAnalyticsService.get_segmentation_summary(db)
+    vendor_id = current["user"].id if current["role"] == UserRole.VENDOR else None
+    return CustomerAnalyticsService.get_segmentation_summary(db, vendor_id=vendor_id)
 
 @router.get("/customers", response_model=List[CustomerSpendProfile])
 def list_segmented_customers(
@@ -30,7 +32,8 @@ def list_segmented_customers(
     current: dict = Depends(get_current_user)
 ):
     """List customer spending profiles with their computed RFM segmentation tier."""
-    return CustomerAnalyticsService.list_segmented_customers(db, segment_filter=segment, skip=skip, limit=limit)
+    vendor_id = current["user"].id if current["role"] == UserRole.VENDOR else None
+    return CustomerAnalyticsService.list_segmented_customers(db, segment_filter=segment, skip=skip, limit=limit, vendor_id=vendor_id)
 
 @router.get("/customers/{customer_id}", response_model=CustomerSpendProfile)
 def get_customer_spend_profile(
@@ -39,4 +42,5 @@ def get_customer_spend_profile(
     current: dict = Depends(get_current_user)
 ):
     """Retrieve comprehensive spending and segmentation history for an individual customer."""
-    return CustomerAnalyticsService.get_customer_spend_profile(db, customer_id)
+    vendor_id = current["user"].id if current["role"] == UserRole.VENDOR else None
+    return CustomerAnalyticsService.get_customer_spend_profile(db, customer_id, vendor_id=vendor_id)

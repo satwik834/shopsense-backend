@@ -14,11 +14,15 @@ from app.schemas.customer_analytics import (
 
 class CustomerAnalyticsService:
     @staticmethod
-    def _calculate_customer_profile(db: Session, customer: Customer) -> CustomerSpendProfile:
-        txs = db.query(Transaction).filter(
+    def _calculate_customer_profile(db: Session, customer: Customer, vendor_id: Optional[int] = None) -> CustomerSpendProfile:
+        tx_query = db.query(Transaction).filter(
             Transaction.customer_id == customer.id,
             Transaction.status == "completed"
-        ).order_by(Transaction.created_at.asc()).all()
+        )
+        if vendor_id is not None:
+            tx_query = tx_query.filter(Transaction.vendor_id == vendor_id)
+
+        txs = tx_query.order_by(Transaction.created_at.asc()).all()
 
         total_orders = len(txs)
         total_spent = sum(t.total_amount for t in txs)
@@ -57,9 +61,18 @@ class CustomerAnalyticsService:
         )
 
     @staticmethod
-    def get_segmentation_summary(db: Session) -> CustomerSegmentationSummaryResponse:
-        customers = db.query(Customer).all()
-        profiles = [CustomerAnalyticsService._calculate_customer_profile(db, c) for c in customers]
+    def get_segmentation_summary(db: Session, vendor_id: Optional[int] = None) -> CustomerSegmentationSummaryResponse:
+        if vendor_id is not None:
+            vendor_cust_ids = db.query(Transaction.customer_id).filter(
+                Transaction.vendor_id == vendor_id,
+                Transaction.status == "completed"
+            ).distinct().all()
+            cust_ids = [c[0] for c in vendor_cust_ids]
+            customers = db.query(Customer).filter(Customer.id.in_(cust_ids)).all() if cust_ids else []
+        else:
+            customers = db.query(Customer).all()
+
+        profiles = [CustomerAnalyticsService._calculate_customer_profile(db, c, vendor_id=vendor_id) for c in customers]
 
         total_cust = len(profiles)
         active_count = sum(1 for p in profiles if p.total_orders > 0)
@@ -127,10 +140,20 @@ class CustomerAnalyticsService:
         db: Session,
         segment_filter: Optional[CustomerSegment] = None,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
+        vendor_id: Optional[int] = None
     ) -> List[CustomerSpendProfile]:
-        customers = db.query(Customer).offset(skip).limit(limit).all()
-        profiles = [CustomerAnalyticsService._calculate_customer_profile(db, c) for c in customers]
+        if vendor_id is not None:
+            vendor_cust_ids = db.query(Transaction.customer_id).filter(
+                Transaction.vendor_id == vendor_id,
+                Transaction.status == "completed"
+            ).distinct().all()
+            cust_ids = [c[0] for c in vendor_cust_ids]
+            customers = db.query(Customer).filter(Customer.id.in_(cust_ids)).offset(skip).limit(limit).all() if cust_ids else []
+        else:
+            customers = db.query(Customer).offset(skip).limit(limit).all()
+
+        profiles = [CustomerAnalyticsService._calculate_customer_profile(db, c, vendor_id=vendor_id) for c in customers]
 
         if segment_filter:
             profiles = [p for p in profiles if p.segment == segment_filter]
@@ -139,11 +162,11 @@ class CustomerAnalyticsService:
         return profiles
 
     @staticmethod
-    def get_customer_spend_profile(db: Session, customer_id: int) -> CustomerSpendProfile:
+    def get_customer_spend_profile(db: Session, customer_id: int, vendor_id: Optional[int] = None) -> CustomerSpendProfile:
         customer = db.query(Customer).filter(Customer.id == customer_id).first()
         if not customer:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Customer with ID {customer_id} not found."
             )
-        return CustomerAnalyticsService._calculate_customer_profile(db, customer)
+        return CustomerAnalyticsService._calculate_customer_profile(db, customer, vendor_id=vendor_id)

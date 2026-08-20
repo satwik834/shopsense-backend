@@ -28,7 +28,7 @@ export default function App() {
   // Enforce tab safety when user role changes
   useEffect(() => {
     if (currentUser) {
-      if (currentUser.role === 'vendor' && (activeTab === 'dashboard' || activeTab === 'vendors' || activeTab === 'customer_insights')) {
+      if (currentUser.role === 'vendor' && (activeTab === 'dashboard' || activeTab === 'vendors')) {
         setActiveTab('products');
       }
     }
@@ -51,7 +51,7 @@ export default function App() {
           localStorage.setItem('shopsense_user', JSON.stringify(userData));
 
           // Set appropriate default tab
-          if (userData.role === 'vendor' && (activeTab === 'dashboard' || activeTab === 'vendors' || activeTab === 'customer_insights')) {
+          if (userData.role === 'vendor' && (activeTab === 'dashboard' || activeTab === 'vendors')) {
             setActiveTab('products');
           }
         }
@@ -109,7 +109,7 @@ export default function App() {
           {isAdmin && activeTab === 'vendors' && <VendorsControl currentUser={currentUser} />}
           {activeTab === 'products' && <ProductsCatalog currentUser={currentUser} />}
           {activeTab === 'inventory' && <InventoryControl currentUser={currentUser} />}
-          {isAdmin && activeTab === 'customer_insights' && <CustomerInsights />}
+          {activeTab === 'customer_insights' && <CustomerInsights currentUser={currentUser} />}
           {activeTab === 'recommendations' && <Recommendations currentUser={currentUser} />}
           {activeTab === 'analytics' && <AnalyticsEngine currentUser={currentUser} />}
         </main>

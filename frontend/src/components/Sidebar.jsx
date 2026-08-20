@@ -25,6 +25,7 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
   const vendorNavItems = [
     { id: 'products', label: 'My Products', icon: Package },
     { id: 'inventory', label: 'Inventory & Alerts', icon: Boxes },
+    { id: 'customer_insights', label: 'Customer Insights', icon: UserCheck },
     { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
     { id: 'analytics', label: 'My Sales & Analytics', icon: BarChart3 },
   ];
