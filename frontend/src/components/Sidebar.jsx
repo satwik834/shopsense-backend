@@ -19,6 +19,8 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
     { id: 'inventory', label: 'Inventory Intelligence', icon: Boxes },
     { id: 'customer_insights', label: 'Customer Insights', icon: UserCheck },
     { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
+    { id: 'bi_reporting', label: 'BI & Reporting', icon: BarChart3 },
+    { id: 'ai_assistant', label: 'AI Assistant', icon: Sparkles },
     { id: 'analytics', label: 'Analytics Engine', icon: BarChart3 },
   ];
 
@@ -27,6 +29,8 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
     { id: 'inventory', label: 'Inventory & Alerts', icon: Boxes },
     { id: 'customer_insights', label: 'Customer Insights', icon: UserCheck },
     { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
+    { id: 'bi_reporting', label: 'BI & Reporting', icon: BarChart3 },
+    { id: 'ai_assistant', label: 'AI Assistant', icon: Sparkles },
     { id: 'analytics', label: 'My Sales & Analytics', icon: BarChart3 },
   ];
 

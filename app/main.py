@@ -10,7 +10,9 @@ from app.routers import (
     analytics,
     inventory,
     customer_analytics,
-    recommendations
+    recommendations,
+    bi_reporting,
+    ai_features
 )
 
 app = FastAPI(
@@ -30,6 +32,8 @@ app.include_router(analytics.router, prefix=settings.API_V1_STR)
 app.include_router(inventory.router, prefix=settings.API_V1_STR)
 app.include_router(customer_analytics.router, prefix=settings.API_V1_STR)
 app.include_router(recommendations.router, prefix=settings.API_V1_STR)
+app.include_router(bi_reporting.router, prefix=settings.API_V1_STR)
+app.include_router(ai_features.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

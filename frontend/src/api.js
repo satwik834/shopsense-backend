@@ -199,6 +199,42 @@ export const api = {
 
   getCustomerRecommendations: async (customerId) => {
     return request(`${API_BASE}/recommendations/customer/${customerId}`);
+  },
+
+  // Milestone 3: BI Reporting & Charts
+  getSalesTrendsChart: async (days = 30) => {
+    return request(`${API_BASE}/bi/charts/sales-trends?days=${days}`);
+  },
+
+  getCategoryDistributionChart: async () => {
+    return request(`${API_BASE}/bi/charts/category-distribution`);
+  },
+
+  getVendorBenchmarking: async (vendorId = null) => {
+    const url = vendorId ? `${API_BASE}/bi/benchmarking?vendor_id=${vendorId}` : `${API_BASE}/bi/benchmarking`;
+    return request(url);
+  },
+
+  // Milestone 3: CSV Export URLs
+  getSalesCsvUrl: () => `${API_BASE}/bi/export/sales-csv`,
+  getInventoryCsvUrl: () => `${API_BASE}/bi/export/inventory-csv`,
+  getCustomersCsvUrl: () => `${API_BASE}/bi/export/customers-csv`,
+
+  // Milestone 3: AI & Decision Intelligence
+  askAIShoppingAssistant: async (query, maxPrice = null, category = null) => {
+    return request(`${API_BASE}/ai/shopping-assistant`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, max_price: maxPrice, category }),
+    });
+  },
+
+  getAIStoreAdvisorReport: async (vendorId = null) => {
+    return request(`${API_BASE}/ai/store-advisor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vendor_id: vendorId }),
+    });
   }
 };
 

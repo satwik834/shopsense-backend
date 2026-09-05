@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False  # False for local HTTP development
     COOKIE_SAMESITE: str = "lax"
 
+    # AI & Gemini API Settings
+    GEMINI_API_KEY: str | None = None
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
     class Config:
         case_sensitive = True
 

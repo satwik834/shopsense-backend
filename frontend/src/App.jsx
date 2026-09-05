@@ -10,6 +10,8 @@ import AnalyticsEngine from './pages/AnalyticsEngine';
 import InventoryControl from './pages/InventoryControl';
 import CustomerInsights from './pages/CustomerInsights';
 import Recommendations from './pages/Recommendations';
+import BusinessIntelligence from './pages/BusinessIntelligence';
+import AIAssistant from './pages/AIAssistant';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -111,6 +113,8 @@ export default function App() {
           {activeTab === 'inventory' && <InventoryControl currentUser={currentUser} />}
           {activeTab === 'customer_insights' && <CustomerInsights currentUser={currentUser} />}
           {activeTab === 'recommendations' && <Recommendations currentUser={currentUser} />}
+          {activeTab === 'bi_reporting' && <BusinessIntelligence currentUser={currentUser} />}
+          {activeTab === 'ai_assistant' && <AIAssistant currentUser={currentUser} />}
           {activeTab === 'analytics' && <AnalyticsEngine currentUser={currentUser} />}
         </main>
       </div>
