@@ -28,8 +28,8 @@ class AIService:
             return None
 
         # Models to attempt in order of preference
-        primary_model = (os.getenv("GEMINI_MODEL") or getattr(settings, "GEMINI_MODEL", None) or "gemini-2.5-flash").strip()
-        models_to_try = [primary_model, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-pro"]
+        primary_model = (os.getenv("GEMINI_MODEL") or getattr(settings, "GEMINI_MODEL", None) or "gemini-3.5-flash").strip()
+        models_to_try = [primary_model, "gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-pro"]
         # Deduplicate while preserving order
         seen = set()
         models = [m for m in models_to_try if not (m in seen or seen.add(m))]
