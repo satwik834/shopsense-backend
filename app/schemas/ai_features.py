@@ -41,3 +41,32 @@ class AIStoreAdvisorResponse(BaseModel):
     diagnostics: List[StoreDiagnosticInsight]
     ai_generated_strategy: str
     is_gemini_powered: bool
+
+# --- AI Product Copywriter & Listing Generator Schemas ---
+class AIGenerateListingRequest(BaseModel):
+    raw_notes: str = Field(..., description="Raw product notes or features")
+    category: str = Field(..., description="Product category")
+    target_price: Optional[float] = Field(None, description="Optional target price")
+
+class AIGenerateListingResponse(BaseModel):
+    suggested_title: str
+    detailed_description: str
+    seo_tags: List[str]
+    marketing_bullets: List[str]
+    is_gemini_powered: bool
+
+# --- AI Smart Price Optimizer Schemas ---
+class AIPriceOptimizerRequest(BaseModel):
+    product_id: int = Field(..., description="Product ID to evaluate for optimal pricing")
+
+class AIPriceOptimizerResponse(BaseModel):
+    product_id: int
+    product_name: str
+    current_price: float
+    recommended_price: float
+    min_price_bound: float
+    max_price_bound: float
+    elasticity_rating: str  # HIGH, MODERATE, INELASTIC
+    pricing_strategy_rationale: str
+    projected_revenue_impact: str
+    is_gemini_powered: bool

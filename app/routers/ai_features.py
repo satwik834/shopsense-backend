@@ -9,7 +9,11 @@ from app.schemas.ai_features import (
     AIShoppingQueryRequest,
     AIShoppingQueryResponse,
     AIStoreAdvisorRequest,
-    AIStoreAdvisorResponse
+    AIStoreAdvisorResponse,
+    AIGenerateListingRequest,
+    AIGenerateListingResponse,
+    AIPriceOptimizerRequest,
+    AIPriceOptimizerResponse
 )
 from app.services.ai_service import AIService
 
@@ -43,3 +47,24 @@ def ai_store_advisor(
         target_vendor_id = req_id if req_id is not None else current["user"].id
 
     return AIService.generate_store_advisor_report(db, vendor_id=target_vendor_id)
+
+@router.post("/generate-listing", response_model=AIGenerateListingResponse)
+def ai_generate_listing(
+    body: AIGenerateListingRequest,
+    current: dict = Depends(get_current_user)
+):
+    """AI Product Copywriter generating SEO titles, descriptions, and feature tags from raw notes."""
+    return AIService.generate_product_listing(
+        raw_notes=body.raw_notes,
+        category=body.category,
+        target_price=body.target_price
+    )
+
+@router.post("/price-optimizer", response_model=AIPriceOptimizerResponse)
+def ai_price_optimizer(
+    body: AIPriceOptimizerRequest,
+    db: Session = Depends(get_db),
+    current: dict = Depends(get_current_user)
+):
+    """AI Smart Price Optimizer calculating optimal product pricing bounds and margin impact."""
+    return AIService.optimize_product_price(db, product_id=body.product_id)

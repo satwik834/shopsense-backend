@@ -6,7 +6,8 @@ import {
   BarChart3, 
   Boxes, 
   UserCheck, 
-  Sparkles 
+  Sparkles,
+  Zap 
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
@@ -21,6 +22,7 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
     { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
     { id: 'bi_reporting', label: 'BI & Reporting', icon: BarChart3 },
     { id: 'ai_assistant', label: 'AI Assistant', icon: Sparkles },
+    { id: 'merchant_studio', label: 'Merchant Studio', icon: Zap },
     { id: 'analytics', label: 'Analytics Engine', icon: BarChart3 },
   ];
 
@@ -31,6 +33,7 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
     { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
     { id: 'bi_reporting', label: 'BI & Reporting', icon: BarChart3 },
     { id: 'ai_assistant', label: 'AI Assistant', icon: Sparkles },
+    { id: 'merchant_studio', label: 'Merchant Studio', icon: Zap },
     { id: 'analytics', label: 'My Sales & Analytics', icon: BarChart3 },
   ];
 

@@ -235,6 +235,23 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ vendor_id: vendorId }),
     });
+  },
+
+  // Milestone 4: AI Merchant Copywriter & Price Optimizer
+  generateProductListing: async (rawNotes, category, targetPrice = null) => {
+    return request(`${API_BASE}/ai/generate-listing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw_notes: rawNotes, category, target_price: targetPrice }),
+    });
+  },
+
+  optimizeProductPrice: async (productId) => {
+    return request(`${API_BASE}/ai/price-optimizer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: productId }),
+    });
   }
 };
 

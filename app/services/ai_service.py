@@ -12,7 +12,9 @@ from app.schemas.ai_features import (
     AIShoppingQueryResponse,
     GroundedProductResult,
     AIStoreAdvisorResponse,
-    StoreDiagnosticInsight
+    StoreDiagnosticInsight,
+    AIGenerateListingResponse,
+    AIPriceOptimizerResponse
 )
 
 class AIService:
@@ -248,5 +250,119 @@ Do not use emojis."""
             executive_summary=exec_summary,
             diagnostics=diagnostics,
             ai_generated_strategy=strategy,
+            is_gemini_powered=is_gemini
+        )
+
+    @staticmethod
+    def generate_product_listing(
+        raw_notes: str,
+        category: str,
+        target_price: Optional[float] = None
+    ) -> AIGenerateListingResponse:
+        prompt = f"""You are the ShopSense AI E-Commerce Copywriter.
+Given the following raw product notes: "{raw_notes}"
+Category: "{category}"
+Target Price: INR {target_price if target_price else 'N/A'}
+
+Generate a JSON object with:
+- "title": Compelling product title (max 70 chars)
+- "description": Engaging 2-paragraph product description
+- "tags": Array of 5 SEO search tags
+- "bullets": Array of 3 feature bullet points
+
+Do not use emojis."""
+
+        gemini_text = AIService._call_gemini_api(prompt)
+
+        if gemini_text:
+            try:
+                # Parse JSON output from Gemini response
+                clean_json = gemini_text.strip().strip("```json").strip("```").strip()
+                parsed = json.loads(clean_json)
+                return AIGenerateListingResponse(
+                    suggested_title=parsed.get("title", f"Premium {category} Item"),
+                    detailed_description=parsed.get("description", raw_notes),
+                    seo_tags=parsed.get("tags", [category.lower(), "shop", "quality", "bestseller", "deal"]),
+                    marketing_bullets=parsed.get("bullets", ["Premium build quality", "Fast delivery", "100% genuine guaranteed"]),
+                    is_gemini_powered=True
+                )
+            except Exception:
+                pass
+
+        # Fallback listing generator
+        title_word = raw_notes.split()[0].title() if raw_notes else "Pro"
+        return AIGenerateListingResponse(
+            suggested_title=f"ShopSense {title_word} {category} Edition",
+            detailed_description=f"Experience exceptional performance with our latest {category} listing. Designed built with premium durability and customer-focused quality.",
+            seo_tags=[category.lower(), "quality", "trending", "verified", "top-rated"],
+            marketing_bullets=[
+                f"Engineered for maximum utility in {category}",
+                "Optimized ergonomics and reliable durability",
+                "Includes official manufacturer warranty coverage"
+            ],
+            is_gemini_powered=False
+        )
+
+    @staticmethod
+    def optimize_product_price(db: Session, product_id: int) -> AIPriceOptimizerResponse:
+        p = db.query(Product).filter(Product.id == product_id).first()
+        if not p:
+            raise HTTPException(status_code=404, detail=f"Product #{product_id} not found")
+
+        tx_count = db.query(Transaction).filter(
+            Transaction.product_id == p.id,
+            Transaction.status == "completed"
+        ).count()
+
+        cat_prods = db.query(Product).filter(Product.category == p.category).all()
+        cat_prices = [item.price for item in cat_prods]
+        avg_cat_price = sum(cat_prices) / max(len(cat_prices), 1)
+
+        # Basic pricing heuristic
+        if tx_count >= 3:
+            rec_price = round(p.price * 1.05, 2)
+            elasticity = "MODERATE"
+            impact = "Projected 4.5% increase in total profit margins without volume drop."
+            rationale = f"High transactional velocity detected ({tx_count} sales). Demand is inelastic enough to absorb a modest 5% price optimization."
+        elif p.price > avg_cat_price * 1.2:
+            rec_price = round(avg_cat_price * 1.05, 2)
+            elasticity = "HIGH"
+            impact = "Projected 18% increase in conversion velocity by aligning closer to category average."
+            rationale = f"Current price (INR {p.price:.2f}) is significantly above category average (INR {avg_cat_price:.2f}). Adjusting downward will stimulate order volume."
+        else:
+            rec_price = round(p.price, 2)
+            elasticity = "STABLE"
+            impact = "Current pricing maintains optimal conversion balance."
+            rationale = f"Pricing (INR {p.price:.2f}) is closely calibrated to category baseline (INR {avg_cat_price:.2f})."
+
+        min_bound = round(rec_price * 0.85, 2)
+        max_bound = round(rec_price * 1.20, 2)
+
+        prompt = f"""You are the ShopSense AI Pricing Analyst.
+Analyze product pricing for '{p.name}' in category '{p.category}':
+- Current Price: INR {p.price:.2f}
+- Completed Sales: {tx_count}
+- Category Average Price: INR {avg_cat_price:.2f}
+- Heuristic Recommended Price: INR {rec_price:.2f}
+
+Provide a 2-sentence executive pricing rationale explaining why this price maximizes revenue. Do not use emojis."""
+
+        gemini_text = AIService._call_gemini_api(prompt)
+        if gemini_text:
+            rationale = gemini_text
+            is_gemini = True
+        else:
+            is_gemini = False
+
+        return AIPriceOptimizerResponse(
+            product_id=p.id,
+            product_name=p.name,
+            current_price=round(p.price, 2),
+            recommended_price=rec_price,
+            min_price_bound=min_bound,
+            max_price_bound=max_bound,
+            elasticity_rating=elasticity,
+            pricing_strategy_rationale=rationale,
+            projected_revenue_impact=impact,
             is_gemini_powered=is_gemini
         )

@@ -12,7 +12,8 @@ from app.routers import (
     customer_analytics,
     recommendations,
     bi_reporting,
-    ai_features
+    ai_features,
+    websockets
 )
 
 app = FastAPI(
@@ -34,6 +35,7 @@ app.include_router(customer_analytics.router, prefix=settings.API_V1_STR)
 app.include_router(recommendations.router, prefix=settings.API_V1_STR)
 app.include_router(bi_reporting.router, prefix=settings.API_V1_STR)
 app.include_router(ai_features.router, prefix=settings.API_V1_STR)
+app.include_router(websockets.router)
 
 @app.get("/")
 def root():

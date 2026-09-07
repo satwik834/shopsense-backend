@@ -12,6 +12,7 @@ import CustomerInsights from './pages/CustomerInsights';
 import Recommendations from './pages/Recommendations';
 import BusinessIntelligence from './pages/BusinessIntelligence';
 import AIAssistant from './pages/AIAssistant';
+import MerchantStudio from './pages/MerchantStudio';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -115,6 +116,7 @@ export default function App() {
           {activeTab === 'recommendations' && <Recommendations currentUser={currentUser} />}
           {activeTab === 'bi_reporting' && <BusinessIntelligence currentUser={currentUser} />}
           {activeTab === 'ai_assistant' && <AIAssistant currentUser={currentUser} />}
+          {activeTab === 'merchant_studio' && <MerchantStudio currentUser={currentUser} />}
           {activeTab === 'analytics' && <AnalyticsEngine currentUser={currentUser} />}
         </main>
       </div>
