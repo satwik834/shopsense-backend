@@ -89,25 +89,33 @@ class AIService:
             reasons = []
             p_text = f"{p.name} {p.category} {p.description or ''}".lower()
 
+            term_match = False
             for t in terms:
                 if t in p_text:
-                    score += 25
+                    score += 35
+                    term_match = True
                     reasons.append(f"Matched search term '{t}'")
 
+            filter_match = False
             if max_price and p.price <= max_price:
                 score += 20
+                filter_match = True
                 reasons.append(f"Price INR {p.price:.2f} within budget <= INR {max_price:.2f}")
 
             if category and p.category and category.lower() in p.category.lower():
                 score += 30
+                filter_match = True
                 reasons.append(f"Category match ({p.category})")
 
-            if p.stock_quantity > 0:
-                score += 15
-            else:
-                score -= 50  # Deprioritize out of stock
+            # Require explicit term match, filter match, or empty query to consider relevant
+            is_relevant = (term_match or filter_match or (not terms and not category and max_price is None))
 
-            if score > 0 or not terms:
+            if is_relevant:
+                if p.stock_quantity > 0:
+                    score += 15
+                else:
+                    score -= 50  # Deprioritize out of stock
+
                 status_str = "IN_STOCK" if p.stock_quantity > 10 else ("LOW_STOCK" if p.stock_quantity > 0 else "OUT_OF_STOCK")
                 reason_str = ", ".join(reasons) if reasons else "Product matches query parameters."
                 scored_products.append({
@@ -134,17 +142,25 @@ class AIService:
         ]
 
         # Step 2: RAG Context Assembly for Gemini Prompt
-        catalog_context_str = "\n".join([
-            f"- Product ID {r.product_id}: '{r.product_name}' ({r.category}) by {r.vendor_name} - Price: INR {r.price}, Stock: {r.stock_status}"
-            for r in suggested_results
-        ])
-
-        prompt = f"""You are the ShopSense AI Shopping Assistant. A customer asked: "{query}"
+        if suggested_results:
+            catalog_context_str = "\n".join([
+                f"- Product ID {r.product_id}: '{r.product_name}' ({r.category}) by {r.vendor_name} - Price: INR {r.price}, Stock: {r.stock_status}"
+                for r in suggested_results
+            ])
+            prompt = f"""You are the ShopSense AI Shopping Assistant. A customer asked: "{query}"
 
 Available Verified Catalog Items:
-{catalog_context_str if catalog_context_str else "No direct catalog match found."}
+{catalog_context_str}
 
 Provide a helpful, friendly, and concise recommendation response guiding the customer to the best match. Reference exact prices in INR and highlight key product qualities.
+Do not use emojis."""
+        else:
+            prompt = f"""You are the ShopSense AI Shopping Assistant. A customer asked: "{query}"
+
+Available Verified Catalog Items:
+No products matching "{query}" exist in the current ShopSense catalog.
+
+Inform the customer clearly and politely that no products matching "{query}" were found in the catalog. Do not recommend unrelated items. Suggest searching for available categories such as Electronics, Apparel, or Fitness.
 Do not use emojis."""
 
         gemini_text = AIService._call_gemini_api(prompt)
@@ -156,9 +172,9 @@ Do not use emojis."""
             is_gemini = False
             if suggested_results:
                 best = suggested_results[0]
-                ai_response = f"Based on your query '{query}', I recommend the {best.product_name} in {best.category} priced at INR {best.price:.2f} from {best.vendor_name}. It has a high relevance score of {best.match_score}/100 and is currently {best.stock_status.replace('_', ' ').title()}."
+                ai_response = f"Based on your query '{query}', I recommend the {best.product_name} in {best.category} priced at INR {best.price:.2f} from {best.vendor_name}. It has a relevance score of {best.match_score}/100 and is currently {best.stock_status.replace('_', ' ').title()}."
             else:
-                ai_response = f"I searched the ShopSense catalog for '{query}', but no items directly matched your query parameters. Try broadening your price range or category search."
+                ai_response = f"I searched the ShopSense catalog for '{query}', but no matching products were found. Try searching for available items in Electronics, Apparel, or Fitness."
 
         return AIShoppingQueryResponse(
             query=query,
