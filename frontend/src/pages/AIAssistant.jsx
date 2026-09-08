@@ -107,7 +107,7 @@ export default function AIAssistant({ currentUser }) {
             AI & Decision Intelligence Studio
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            RAG-powered conversational shopping assistant & Gemini AI executive store diagnostics
+            RAG-powered conversational shopping assistant & AI executive store diagnostics
           </p>
         </div>
 
@@ -205,7 +205,7 @@ export default function AIAssistant({ currentUser }) {
                       ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
                       : 'bg-slate-800 text-slate-400 border border-slate-700'
                   }`}>
-                    {item.is_gemini_powered ? 'Gemini 2.5 Flash Powered' : 'Local RAG Catalog Engine'}
+                    {item.is_gemini_powered ? 'AI Powered' : 'Local RAG Catalog Engine'}
                   </span>
                 </div>
 
@@ -307,7 +307,7 @@ export default function AIAssistant({ currentUser }) {
                       ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
                       : 'bg-slate-800 text-slate-400 border border-slate-700'
                   }`}>
-                    {advisorReport.is_gemini_powered ? 'Gemini 2.5 Flash Advisory' : 'Standard Diagnostic Audit'}
+                    {advisorReport.is_gemini_powered ? 'AI Executive Advisory' : 'Standard Diagnostic Audit'}
                   </span>
                 </div>
                 <p className="text-base font-semibold text-white">
