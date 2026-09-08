@@ -46,6 +46,18 @@ export default function AIAssistant({ currentUser }) {
   const [advisorReport, setAdvisorReport] = useState(null);
   const [loadingAdvisor, setLoadingAdvisor] = useState(false);
   const [advisorError, setAdvisorError] = useState(null);
+  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const [vendorsList, setVendorsList] = useState([]);
+
+  const isAdmin = currentUser?.role?.toLowerCase() === 'admin';
+
+  useEffect(() => {
+    if (isAdmin) {
+      api.getVendors()
+        .then(data => setVendorsList(data || []))
+        .catch(err => console.error('Failed to fetch vendors list for admin:', err));
+    }
+  }, [currentUser, isAdmin]);
 
   const handleAskShoppingAssistant = async (e) => {
     e.preventDefault();
@@ -247,7 +259,7 @@ export default function AIAssistant({ currentUser }) {
               Executive Store Diagnostic Audit
             </h2>
             <div className="flex items-center gap-3">
-              {currentUser?.role === 'ADMIN' && (
+              {isAdmin && (
                 <select
                   value={selectedVendorId}
                   onChange={(e) => {
