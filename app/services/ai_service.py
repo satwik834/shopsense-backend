@@ -36,8 +36,8 @@ class AIService:
             return None
 
         # Models to attempt in order of preference
-        primary_model = (os.getenv("GEMINI_MODEL") or getattr(settings, "GEMINI_MODEL", None) or "gemini-3.6-flash").strip()
-        models_to_try = [primary_model, "gemini-3.6-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash"]
+        primary_model = (os.getenv("GEMINI_MODEL") or getattr(settings, "GEMINI_MODEL", None) or "gemini-flash-lite-latest").strip()
+        models_to_try = [primary_model, "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemma-4-26b-a4b-it", "gemini-3.6-flash", "gemini-flash-latest"]
         # Deduplicate while preserving order
         seen = set()
         models = [m for m in models_to_try if not (m in seen or seen.add(m))]
@@ -192,15 +192,20 @@ Do not use emojis."""
         )
 
     @staticmethod
-    def generate_store_advisor_report(db: Session, vendor_id: int) -> AIStoreAdvisorResponse:
-        vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
-        if not vendor:
-            store_name = f"Vendor #{vendor_id}"
-        else:
-            store_name = vendor.store_name or vendor.name
+    def generate_store_advisor_report(db: Session, vendor_id: Optional[int] = None) -> AIStoreAdvisorResponse:
+        if vendor_id is not None:
+            vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+            if not vendor:
+                store_name = f"Vendor #{vendor_id}"
+            else:
+                store_name = vendor.store_name or vendor.name
 
-        prods = db.query(Product).filter(Product.vendor_id == vendor_id).all()
-        txs = db.query(Transaction).filter(Transaction.vendor_id == vendor_id, Transaction.status == "completed").all()
+            prods = db.query(Product).filter(Product.vendor_id == vendor_id).all()
+            txs = db.query(Transaction).filter(Transaction.vendor_id == vendor_id, Transaction.status == "completed").all()
+        else:
+            store_name = "All Platform Stores (Marketplace Overview)"
+            prods = db.query(Product).all()
+            txs = db.query(Transaction).filter(Transaction.status == "completed").all()
 
         tot_rev = sum(t.total_amount for t in txs)
         tot_orders = len(txs)
@@ -216,7 +221,7 @@ Do not use emojis."""
                 StoreDiagnosticInsight(
                     category="Inventory Risk",
                     title="Safety Stock Breach Warning",
-                    finding=f"{len(low_stock_prods)} of your {tot_prods} products have breached safety thresholds ({p_names}).",
+                    finding=f"{len(low_stock_prods)} of {tot_prods} products have breached safety thresholds ({p_names}).",
                     impact_level="HIGH",
                     actionable_recommendation="Reorder inventory immediately to prevent stockouts and preserve search ranking."
                 )
@@ -229,7 +234,7 @@ Do not use emojis."""
                     StoreDiagnosticInsight(
                         category="Pricing Strategy",
                         title="Low Average Order Value (AOV)",
-                        finding=f"Your current AOV is INR {aov:.2f}, which is below optimal revenue density benchmarks.",
+                        finding=f"Current AOV is {aov:.2f}, which is below optimal revenue density benchmarks.",
                         impact_level="MEDIUM",
                         actionable_recommendation="Introduce multi-item bundles or minimum order thresholds to increase basket size."
                     )
@@ -239,7 +244,7 @@ Do not use emojis."""
                     StoreDiagnosticInsight(
                         category="Sales Performance",
                         title="Strong Order Basket Value",
-                        finding=f"Your store maintains a healthy AOV of INR {aov:.2f} across {tot_orders} completed orders.",
+                        finding=f"Maintains a healthy AOV of {aov:.2f} across {tot_orders} completed orders.",
                         impact_level="LOW",
                         actionable_recommendation="Capitalize on high basket size by introducing premium catalog variants."
                     )
@@ -249,28 +254,28 @@ Do not use emojis."""
                 StoreDiagnosticInsight(
                     category="Sales Activation",
                     title="No Transaction Velocity",
-                    finding="Your store catalog has recorded 0 completed orders.",
+                    finding="Catalog has recorded 0 completed orders.",
                     impact_level="HIGH",
                     actionable_recommendation="Run targeted promotions and review product pricing competitive positioning."
                 )
             )
 
         # Prompt for Gemini
-        prompt = f"""You are the ShopSense AI Executive Data Analyst advising the merchant store '{store_name}'.
+        prompt = f"""You are the ShopSense AI Executive Data Analyst advising '{store_name}'.
 
 Store Metrics Summary:
 - Total Products: {tot_prods}
-- Total Revenue: INR {tot_rev:.2f}
+- Total Revenue: {tot_rev:.2f}
 - Completed Orders: {tot_orders}
 - Low Stock Items: {len(low_stock_prods)}
 
-Write a concise 3-paragraph executive diagnostic strategy report advising the merchant on how to increase revenue, manage inventory, and optimize customer retention.
-Do not use emojis."""
+Write a concise 3-paragraph executive diagnostic strategy report advising on how to increase revenue, manage inventory, and optimize customer retention.
+Do not use currency symbols or emojis. Keep financial figures purely numerical."""
 
         gemini_text = AIService._call_gemini_api(prompt)
 
         if gemini_text:
-            exec_summary = f"Executive Store Advisory for {store_name}: Active catalog monitoring across {tot_prods} products and INR {tot_rev:.2f} total revenue."
+            exec_summary = f"Executive Store Advisory for {store_name}: Active catalog monitoring across {tot_prods} products and {tot_rev:.2f} total revenue."
             strategy = gemini_text
             is_gemini = True
         else:
@@ -278,13 +283,13 @@ Do not use emojis."""
             strategy = (
                 f"Store Advisory Strategy for {store_name}:\n\n"
                 f"1. Inventory Governance: You have {len(low_stock_prods)} item(s) below recommended safety stock thresholds. Immediate purchase order reordering is advised to maintain product availability.\n"
-                f"2. Revenue Growth: Your current total revenue stands at INR {tot_rev:.2f} across {tot_orders} orders. Focus on optimizing high-velocity product listings to increase overall store conversion.\n"
+                f"2. Revenue Growth: Your current total revenue stands at {tot_rev:.2f} across {tot_orders} orders. Focus on optimizing high-velocity product listings to increase overall store conversion.\n"
                 f"3. Customer Retention: Cross-sell related items to buyers in your top-performing categories to build long-term repeat customer loyalty."
             )
             is_gemini = False
 
         return AIStoreAdvisorResponse(
-            vendor_id=vendor_id,
+            vendor_id=vendor_id if vendor_id is not None else 0,
             store_name=store_name,
             executive_summary=exec_summary,
             diagnostics=diagnostics,

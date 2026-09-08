@@ -39,7 +39,6 @@ def ai_store_advisor(
     if current["role"] == UserRole.VENDOR:
         target_vendor_id = current["user"].id
     else:
-        req_id = body.vendor_id if body and body.vendor_id is not None else None
-        target_vendor_id = req_id if req_id is not None else current["user"].id
+        target_vendor_id = body.vendor_id if body and body.vendor_id is not None else None
 
     return AIService.generate_store_advisor_report(db, vendor_id=target_vendor_id)
