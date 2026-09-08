@@ -22,12 +22,22 @@ class AIService:
     def _call_gemini_api(prompt: str) -> Optional[str]:
         # Read API key dynamically from environment or settings
         api_key = (os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", None) or "").strip()
+        if not api_key and os.path.exists(".env"):
+            try:
+                with open(".env", "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip().startswith("GEMINI_API_KEY="):
+                            api_key = line.strip().split("=", 1)[1].strip().strip('"').strip("'")
+                            break
+            except Exception:
+                pass
+
         if not api_key:
             return None
 
         # Models to attempt in order of preference
-        primary_model = (os.getenv("GEMINI_MODEL") or getattr(settings, "GEMINI_MODEL", None) or "gemini-3.5-flash").strip()
-        models_to_try = [primary_model, "gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-pro"]
+        primary_model = (os.getenv("GEMINI_MODEL") or getattr(settings, "GEMINI_MODEL", None) or "gemini-3.6-flash").strip()
+        models_to_try = [primary_model, "gemini-3.6-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash"]
         # Deduplicate while preserving order
         seen = set()
         models = [m for m in models_to_try if not (m in seen or seen.add(m))]

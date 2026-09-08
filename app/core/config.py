@@ -22,9 +22,12 @@ class Settings(BaseSettings):
 
     # AI & Gemini API Settings
     GEMINI_API_KEY: str | None = None
-    GEMINI_MODEL: str = "gemini-3.5-flash"
+    GEMINI_MODEL: str = "gemini-3.6-flash"
 
     class Config:
         case_sensitive = True
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"
 
 settings = Settings()
