@@ -15,16 +15,23 @@ from app.schemas.ai_features import (
     StoreDiagnosticInsight
 )
 
+import os
+
 class AIService:
     @staticmethod
     def _call_gemini_api(prompt: str) -> Optional[str]:
-        api_key = settings.GEMINI_API_KEY
-        if not api_key or not api_key.strip():
+        # Read API key dynamically from environment or settings
+        api_key = (os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", None) or "").strip()
+        if not api_key:
             return None
 
-        # Call Google Gemini REST API
-        model = settings.GEMINI_MODEL or "gemini-2.5-flash"
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key.strip()}"
+        # Models to attempt in order of preference
+        primary_model = (os.getenv("GEMINI_MODEL") or getattr(settings, "GEMINI_MODEL", None) or "gemini-3.5-flash").strip()
+        models_to_try = [primary_model, "gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-pro"]
+        # Deduplicate while preserving order
+        seen = set()
+        models = [m for m in models_to_try if not (m in seen or seen.add(m))]
+
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{
@@ -32,19 +39,27 @@ class AIService:
             }]
         }
 
-        try:
-            with httpx.Client(timeout=15.0) as client:
-                res = client.post(url, headers=headers, json=payload)
-                if res.status_code == 200:
-                    data = res.json()
-                    candidates = data.get("candidates", [])
-                    if candidates:
-                        parts = candidates[0].get("content", {}).get("parts", [])
-                        if parts:
-                            return parts[0].get("text", "").strip()
-        except Exception as e:
-            print(f"Gemini API invocation error: {e}")
-            return None
+        with httpx.Client(timeout=20.0) as client:
+            for model in models:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                try:
+                    res = client.post(url, headers=headers, json=payload)
+                    if res.status_code == 200:
+                        data = res.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            parts = candidates[0].get("content", {}).get("parts", [])
+                            if parts:
+                                text = parts[0].get("text", "").strip()
+                                if text:
+                                    return text
+                    elif res.status_code == 404:
+                        # Model not found, fallback to next model
+                        continue
+                    else:
+                        print(f"Gemini API ({model}) response code {res.status_code}: {res.text}")
+                except Exception as e:
+                    print(f"Gemini API ({model}) request exception: {e}")
 
         return None
 
