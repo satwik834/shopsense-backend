@@ -46,6 +46,18 @@ export default function AIAssistant({ currentUser }) {
   const [advisorReport, setAdvisorReport] = useState(null);
   const [loadingAdvisor, setLoadingAdvisor] = useState(false);
   const [advisorError, setAdvisorError] = useState(null);
+  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const [vendorsList, setVendorsList] = useState([]);
+
+  const isAdmin = currentUser?.role?.toLowerCase() === 'admin';
+
+  useEffect(() => {
+    if (isAdmin) {
+      api.getVendors()
+        .then(data => setVendorsList(data || []))
+        .catch(err => console.error('Failed to fetch vendors list for admin:', err));
+    }
+  }, [currentUser, isAdmin]);
 
   const handleAskShoppingAssistant = async (e) => {
     e.preventDefault();
@@ -64,11 +76,12 @@ export default function AIAssistant({ currentUser }) {
     }
   };
 
-  const loadAdvisorReport = async () => {
+  const loadAdvisorReport = async (vendorIdOverride = selectedVendorId) => {
     try {
       setLoadingAdvisor(true);
       setAdvisorError(null);
-      const res = await api.getAIStoreAdvisorReport();
+      const targetId = vendorIdOverride ? parseInt(vendorIdOverride, 10) : null;
+      const res = await api.getAIStoreAdvisorReport(targetId);
       setAdvisorReport(res);
     } catch (err) {
       console.error('Failed to load AI Store Advisor report:', err);
@@ -94,7 +107,7 @@ export default function AIAssistant({ currentUser }) {
             AI & Decision Intelligence Studio
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            RAG-powered conversational shopping assistant & Gemini AI executive store diagnostics
+            RAG-powered conversational shopping assistant & AI executive store diagnostics
           </p>
         </div>
 
@@ -192,7 +205,7 @@ export default function AIAssistant({ currentUser }) {
                       ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
                       : 'bg-slate-800 text-slate-400 border border-slate-700'
                   }`}>
-                    {item.is_gemini_powered ? 'Gemini 2.5 Flash Powered' : 'Local RAG Catalog Engine'}
+                    {item.is_gemini_powered ? 'AI Powered' : 'Local RAG Catalog Engine'}
                   </span>
                 </div>
 
@@ -245,14 +258,34 @@ export default function AIAssistant({ currentUser }) {
               <Bot className="w-5 h-5 text-indigo-400" />
               Executive Store Diagnostic Audit
             </h2>
-            <button
-              onClick={loadAdvisorReport}
-              disabled={loadingAdvisor}
-              className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loadingAdvisor ? 'animate-spin' : ''}`} />
-              Re-Audit Store Data
-            </button>
+            <div className="flex items-center gap-3">
+              {isAdmin && (
+                <select
+                  value={selectedVendorId}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setSelectedVendorId(newId);
+                    loadAdvisorReport(newId);
+                  }}
+                  className="bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold outline-none focus:border-indigo-500"
+                >
+                  <option value="">All Platform Stores (Marketplace Overview)</option>
+                  {vendorsList.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.store_name || v.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <button
+                onClick={() => loadAdvisorReport()}
+                disabled={loadingAdvisor}
+                className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingAdvisor ? 'animate-spin' : ''}`} />
+                Re-Audit Store Data
+              </button>
+            </div>
           </div>
 
           {advisorError && (
@@ -274,7 +307,7 @@ export default function AIAssistant({ currentUser }) {
                       ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
                       : 'bg-slate-800 text-slate-400 border border-slate-700'
                   }`}>
-                    {advisorReport.is_gemini_powered ? 'Gemini 2.5 Flash Advisory' : 'Standard Diagnostic Audit'}
+                    {advisorReport.is_gemini_powered ? 'AI Executive Advisory' : 'Standard Diagnostic Audit'}
                   </span>
                 </div>
                 <p className="text-base font-semibold text-white">
