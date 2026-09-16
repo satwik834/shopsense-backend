@@ -237,7 +237,7 @@ export default function Login({ onLoginSuccess }) {
           <div className="text-[11px] font-mono uppercase text-zinc-500 text-center mb-3">
             Quick Demo Accounts
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <button
               onClick={() => quickFill('admin@shopsense.com', 'adminpassword123')}
               className="px-2 py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-indigo-500 text-[11px] text-zinc-300 font-mono transition-colors text-center"
@@ -248,13 +248,19 @@ export default function Login({ onLoginSuccess }) {
               onClick={() => quickFill('contact@apex.com', 'vendorpass123')}
               className="px-2 py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-emerald-500 text-[11px] text-emerald-400 font-mono transition-colors text-center"
             >
-              Approved Vendor
+              Vendor (Approved)
             </button>
             <button
               onClick={() => quickFill('apply@freshfoods.com', 'vendorpass123')}
               className="px-2 py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-amber-500 text-[11px] text-amber-400 font-mono transition-colors text-center"
             >
-              Pending Vendor
+              Vendor (Pending)
+            </button>
+            <button
+              onClick={() => quickFill('ananya.sharma@example.com', 'customerpass123')}
+              className="px-2 py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-purple-500 text-[11px] text-purple-400 font-mono transition-colors text-center"
+            >
+              Customer
             </button>
           </div>
         </div>

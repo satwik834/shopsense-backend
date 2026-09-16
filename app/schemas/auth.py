@@ -15,6 +15,13 @@ class AdminCreate(BaseModel):
     email: EmailStr
     password: str
 
+class CustomerRegister(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str

@@ -1,17 +1,34 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.core.database import get_db
 from app.schemas.transaction import TransactionCreate, TransactionResponse
 from app.services.transaction_service import TransactionService
+from app.core.websocket_manager import ws_manager
+import asyncio
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
+async def notify_new_order(tx):
+    payload = {
+        "transaction_id": tx.id,
+        "amount": tx.total_amount,
+        "product_id": tx.product_id,
+        "status": tx.status
+    }
+    await ws_manager.broadcast_event("ORDER_CREATED", payload)
+
 @router.post("/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
-def record_transaction(tx_in: TransactionCreate, db: Session = Depends(get_db)):
+def record_transaction(
+    tx_in: TransactionCreate, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     """Record a purchase transaction, deduct inventory stock, and lock historical unit price."""
-    return TransactionService.record_transaction(db, tx_in)
+    tx = TransactionService.record_transaction(db, tx_in)
+    background_tasks.add_task(notify_new_order, tx)
+    return tx
 
 @router.get("/", response_model=List[TransactionResponse])
 def list_transactions(

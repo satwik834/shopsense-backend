@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { Package, Plus, Trash2, Edit3, Save, X, AlertCircle } from 'lucide-react';
+import { Package, Plus, Trash2, Edit3, Save, X, AlertCircle, ShoppingCart } from 'lucide-react';
 
 export default function ProductsCatalog({ currentUser }) {
   const [products, setProducts] = useState([]);
@@ -26,6 +26,8 @@ export default function ProductsCatalog({ currentUser }) {
   const [vendorId, setVendorId] = useState('');
 
   const isAdmin = currentUser?.role === 'admin';
+  const isCustomer = currentUser?.role === 'customer';
+  const canManageProducts = isAdmin || currentUser?.role === 'vendor';
 
   useEffect(() => {
     loadData();
@@ -120,14 +122,31 @@ export default function ProductsCatalog({ currentUser }) {
     }
   };
 
+  const handlePlaceOrder = async (product) => {
+    try {
+      await api.recordTransaction({
+        customer_id: currentUser.user_id,
+        vendor_id: product.vendor_id,
+        product_id: product.id,
+        quantity: 1
+      });
+      alert(`Successfully placed order for ${product.name}!`);
+      await loadData();
+    } catch (err) {
+      alert(`Failed to place order: ${err.message}`);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Product Catalog</h1>
+          <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">
+            {isCustomer ? 'Marketplace Storefront' : 'Product Catalog'}
+          </h1>
           <p className="text-xs font-mono text-indigo-400 mt-1 uppercase tracking-wider">
-            {isAdmin ? 'ALL MARKETPLACE PRODUCTS' : 'MY STORE CATALOG & INVENTORY'}
+            {isAdmin ? 'ALL MARKETPLACE PRODUCTS' : (isCustomer ? 'BROWSE AVAILABLE ITEMS' : 'MY STORE CATALOG & INVENTORY')}
           </p>
         </div>
 
@@ -150,140 +169,142 @@ export default function ProductsCatalog({ currentUser }) {
       </div>
 
       {/* Add Product Form */}
-      <div className="bg-[#12141d] border border-zinc-800/80 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-6">
-          <Plus className="w-5 h-5 text-indigo-400" />
-          <h2 className="text-base font-bold text-zinc-100">Add New Product</h2>
-        </div>
-
-        {message && (
-          <div className={`p-3 rounded-lg text-xs font-medium mb-5 border ${
-            message.type === 'error'
-              ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-          }`}>
-            {message.text}
+      {canManageProducts && (
+        <div className="bg-[#12141d] border border-zinc-800/80 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <Plus className="w-5 h-5 text-indigo-400" />
+            <h2 className="text-base font-bold text-zinc-100">Add New Product</h2>
           </div>
-        )}
 
-        <form onSubmit={handleCreateProduct} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                PRODUCT NAME *
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Wireless Headphones"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
-                required
-              />
+          {message && (
+            <div className={`p-3 rounded-lg text-xs font-medium mb-5 border ${
+              message.type === 'error'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+            }`}>
+              {message.text}
             </div>
+          )}
 
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                PRICE (₹) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="1499.00"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                STOCK QUANTITY
-              </label>
-              <input
-                type="number"
-                placeholder="100"
-                value={stock}
-                onChange={(e) => setStock(e.target.value)}
-                className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
-              />
-            </div>
-
-            {isAdmin && (
+          <form onSubmit={handleCreateProduct} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                  ASSIGN VENDOR *
+                  PRODUCT NAME *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Wireless Headphones"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                  PRICE (₹) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="1499.00"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                  STOCK QUANTITY
+                </label>
+                <input
+                  type="number"
+                  placeholder="100"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
+                />
+              </div>
+
+              {isAdmin && (
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                    ASSIGN VENDOR *
+                  </label>
+                  <select
+                    value={vendorId}
+                    onChange={(e) => setVendorId(e.target.value)}
+                    className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 focus:outline-none transition-colors"
+                    required
+                  >
+                    <option value="">Select Vendor</option>
+                    {vendors.map((v) => (
+                      <option key={v.id} value={v.id}>{v.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                  CATEGORY
                 </label>
                 <select
-                  value={vendorId}
-                  onChange={(e) => setVendorId(e.target.value)}
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
                   className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 focus:outline-none transition-colors"
-                  required
                 >
-                  <option value="">Select Vendor</option>
-                  {vendors.map((v) => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
-                  ))}
+                  <option value="Electronics">Electronics</option>
+                  <option value="Apparel">Apparel</option>
+                  <option value="Footwear">Footwear</option>
+                  <option value="Home & Kitchen">Home & Kitchen</option>
+                  <option value="Books">Books</option>
                 </select>
               </div>
-            )}
 
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                CATEGORY
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 focus:outline-none transition-colors"
-              >
-                <option value="Electronics">Electronics</option>
-                <option value="Apparel">Apparel</option>
-                <option value="Footwear">Footwear</option>
-                <option value="Home & Kitchen">Home & Kitchen</option>
-                <option value="Books">Books</option>
-              </select>
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                  SKU (STOCK KEEPING UNIT)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. APX-WHP-01"
+                  value={sku}
+                  onChange={(e) => setSku(e.target.value)}
+                  className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                SKU (STOCK KEEPING UNIT)
+                DESCRIPTION
               </label>
-              <input
-                type="text"
-                placeholder="e.g. APX-WHP-01"
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
+              <textarea
+                rows={2}
+                placeholder="High quality consumer product..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
               />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-              DESCRIPTION
-            </label>
-            <textarea
-              rows={2}
-              placeholder="High quality consumer product..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-[#090a0f] border border-zinc-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors"
-            />
-          </div>
-
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50"
-            >
-              {submitting ? 'Adding Product...' : 'Add Product'}
-            </button>
-          </div>
-        </form>
-      </div>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50"
+              >
+                {submitting ? 'Adding Product...' : 'Add Product'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Product Catalog Table */}
       <div className="bg-[#12141d] border border-zinc-800/80 rounded-2xl p-6 shadow-sm">
@@ -340,27 +361,41 @@ export default function ProductsCatalog({ currentUser }) {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setEditingProduct(p);
-                            setEditStock(p.stock_quantity.toString());
-                            setEditPrice(p.price.toString());
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-colors border border-zinc-700/60"
-                        >
-                          <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
-                          <span>Edit Stock</span>
-                        </button>
+                      {canManageProducts && (
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingProduct(p);
+                              setEditStock(p.stock_quantity.toString());
+                              setEditPrice(p.price.toString());
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-colors border border-zinc-700/60"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>Edit Stock</span>
+                          </button>
 
-                        <button
-                          onClick={() => handleDeleteProduct(p.id, p.name)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs font-medium transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
+                          <button
+                            onClick={() => handleDeleteProduct(p.id, p.name)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs font-medium transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                      {isCustomer && (
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => handlePlaceOrder(p)}
+                            disabled={p.stock_quantity < 1}
+                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors"
+                          >
+                            <ShoppingCart className="w-3.5 h-3.5" />
+                            <span>{p.stock_quantity < 1 ? 'Out of Stock' : 'Buy Now'}</span>
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

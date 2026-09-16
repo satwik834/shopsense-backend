@@ -12,6 +12,7 @@ import {
 
 export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
   const isAdmin = currentUser?.role === 'admin';
+  const isCustomer = currentUser?.role === 'customer';
 
   const adminNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -21,7 +22,7 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
     { id: 'customer_insights', label: 'Customer Insights', icon: UserCheck },
     { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
     { id: 'bi_reporting', label: 'BI & Reporting', icon: BarChart3 },
-    { id: 'ai_assistant', label: 'AI Assistant', icon: Sparkles },
+    { id: 'store_analyst', label: 'Executive Store Analyst', icon: Sparkles },
     { id: 'merchant_studio', label: 'Merchant Studio', icon: Zap },
     { id: 'analytics', label: 'Analytics Engine', icon: BarChart3 },
   ];
@@ -32,12 +33,17 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
     { id: 'customer_insights', label: 'Customer Insights', icon: UserCheck },
     { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
     { id: 'bi_reporting', label: 'BI & Reporting', icon: BarChart3 },
-    { id: 'ai_assistant', label: 'AI Assistant', icon: Sparkles },
+    { id: 'store_analyst', label: 'Executive Store Analyst', icon: Sparkles },
     { id: 'merchant_studio', label: 'Merchant Studio', icon: Zap },
     { id: 'analytics', label: 'My Sales & Analytics', icon: BarChart3 },
   ];
 
-  const navItems = isAdmin ? adminNavItems : vendorNavItems;
+  const customerNavItems = [
+    { id: 'products', label: 'Products Catalog', icon: Package },
+    { id: 'ai_assistant', label: 'AI Assistant', icon: Sparkles },
+  ];
+
+  const navItems = isAdmin ? adminNavItems : (isCustomer ? customerNavItems : vendorNavItems);
 
   return (
     <aside className="w-64 border-r border-zinc-800/80 bg-[#090a0f] min-h-screen flex flex-col justify-between p-4 selection:bg-indigo-500/20 flex-shrink-0">
@@ -49,10 +55,10 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser }) {
           </div>
           <div>
             <h1 className="font-bold text-base text-zinc-100 tracking-tight">
-              {isAdmin ? 'ShopSense OS' : 'ShopSense Seller'}
+              {isAdmin ? 'ShopSense OS' : (isCustomer ? 'ShopSense Hub' : 'ShopSense Seller')}
             </h1>
             <p className="text-[11px] text-zinc-500 font-medium">
-              {isAdmin ? 'Enterprise Control v0.2' : 'Vendor Merchant Portal'}
+              {isAdmin ? 'Enterprise Control v0.2' : (isCustomer ? 'Customer Portal' : 'Vendor Merchant Portal')}
             </p>
           </div>
         </div>

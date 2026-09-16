@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.schemas.auth import VendorRegister, LoginRequest, TokenResponse
+from app.schemas.auth import VendorRegister, CustomerRegister, LoginRequest, TokenResponse
 from app.schemas.vendor import VendorResponse
+from app.schemas.customer import CustomerResponse
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -13,6 +14,11 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 def register_vendor(vendor_in: VendorRegister, db: Session = Depends(get_db)):
     """Register a new vendor account."""
     return AuthService.register_vendor(db, vendor_in)
+
+@router.post("/register-customer", response_model=CustomerResponse)
+def register_customer(customer_in: CustomerRegister, db: Session = Depends(get_db)):
+    """Register a new customer account."""
+    return AuthService.register_customer(db, customer_in)
 
 @router.post("/login", response_model=TokenResponse)
 def login(login_in: LoginRequest, response: Response, db: Session = Depends(get_db)):

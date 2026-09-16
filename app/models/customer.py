@@ -9,8 +9,10 @@ class Customer(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
     phone = Column(String(50), nullable=True)
     address = Column(Text, nullable=True)
+    role = Column(String(50), default="customer", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Relationships

@@ -73,8 +73,11 @@ def get_current_user(
 
     if role == UserRole.ADMIN:
         user = db.query(Admin).filter(Admin.id == int(user_id)).first()
-    else:
+    elif role == UserRole.VENDOR:
         user = db.query(Vendor).filter(Vendor.id == int(user_id)).first()
+    elif role == UserRole.CUSTOMER:
+        from app.models.customer import Customer
+        user = db.query(Customer).filter(Customer.id == int(user_id)).first()
 
     if not user or not getattr(user, 'is_active', True):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account not found or deactivated.")

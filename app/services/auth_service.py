@@ -12,7 +12,8 @@ from app.core.security import (
 from app.models.enums import UserRole, ApprovalStatus
 from app.models.admin import Admin
 from app.models.vendor import Vendor
-from app.schemas.auth import VendorRegister
+from app.models.customer import Customer
+from app.schemas.auth import VendorRegister, CustomerRegister
 
 class AuthService:
     @staticmethod
@@ -38,6 +39,29 @@ class AuthService:
         db.commit()
         db.refresh(vendor)
         return vendor
+
+    @staticmethod
+    def register_customer(db: Session, customer_in: CustomerRegister) -> Customer:
+        existing_customer = db.query(Customer).filter(Customer.email == customer_in.email).first()
+        if existing_customer:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Customer with email '{customer_in.email}' already exists."
+            )
+        
+        customer = Customer(
+            name=customer_in.name,
+            email=customer_in.email,
+            hashed_password=hash_password(customer_in.password),
+            phone=customer_in.phone,
+            address=customer_in.address,
+            role=UserRole.CUSTOMER.value,
+            is_active=True
+        )
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+        return customer
 
     @staticmethod
     def authenticate_user(db: Session, response: Response, email: str, password: str) -> dict:
@@ -75,6 +99,26 @@ class AuthService:
                 "role": UserRole.VENDOR.value,
                 "id": vendor.id,
                 "name": vendor.name
+            }
+            token_info = AuthService._set_auth_cookies(response, user_data)
+            user_data["access_token"] = token_info["access_token"]
+            return user_data
+
+        # Check Customer table next
+        customer = db.query(Customer).filter(Customer.email == email).first()
+        if customer and verify_password(password, customer.hashed_password):
+            if not customer.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Your customer account has been deactivated."
+                )
+
+            user_data = {
+                "sub": str(customer.id),
+                "email": customer.email,
+                "role": UserRole.CUSTOMER.value,
+                "id": customer.id,
+                "name": customer.name
             }
             token_info = AuthService._set_auth_cookies(response, user_data)
             user_data["access_token"] = token_info["access_token"]
