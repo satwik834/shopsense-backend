@@ -39,7 +39,7 @@ class AIService:
 
         # Models to attempt in order of preference
         primary_model = (os.getenv("GEMINI_MODEL") or getattr(settings, "GEMINI_MODEL", None) or "gemini-flash-lite-latest").strip()
-        models_to_try = [primary_model, "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemma-4-26b-a4b-it", "gemini-3.6-flash", "gemini-flash-latest"]
+        models_to_try = [primary_model, "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemma-b4-26-a4b-it", "gemini-3.6-flash", "gemini-flash-latest"]
         # Deduplicate while preserving order
         seen = set()
         models = [m for m in models_to_try if not (m in seen or seen.add(m))]
