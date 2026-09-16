@@ -51,3 +51,6 @@ env/
 # OS files
 .DS_Store
 Thumbs.db
+# Ignore documents
+*.pdf
+*.docx
