@@ -8,7 +8,7 @@ ShopSense is an enterprise multi-vendor e-commerce analytics, business intellige
 
 ### Backend Architecture
 - **Framework**: FastAPI (Python 3.12)
-- **Database & ORM**: SQLite with SQLAlchemy ORM
+- **Database & ORM**: PostgreSQL with SQLAlchemy ORM
 - **Authentication**: JWT authentication with HTTP-Only cookie handling and Role-Based Access Control (Admin, Vendor, Customer)
 - **Generative AI Engine**: Google Gemini REST API integration with dynamic runtime API key loading and multi-model failover (`gemini-flash-lite-latest`, `gemini-3.5-flash-lite`, `gemma-4-26b-a4b-it`)
 - **Real-Time Communication**: Async WebSocket event distribution manager
