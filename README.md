@@ -51,7 +51,7 @@ infyspring/
 ├── app/
 │   ├── core/
 │   │   ├── config.py             # Application environment settings & model configs
-│   │   ├── database.py           # SQLite connection & session manager
+│   │   ├── database.py           # PostgreSQL connection & session manager
 │   │   ├── deps.py               # Authentication & dependency injection guards
 │   │   ├── security.py           # Password hashing & JWT token generators
 │   │   └── websocket_manager.py  # Real-time WebSocket connection manager
